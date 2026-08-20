@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors, extracted directly from CSF_logo.png and favicon-CSF.webp */
+  --color-csf-purple: #8A4097;      /* icon/mark color -- primary actions, theme_color */
+  --color-csf-mauve: #935A72;       /* wordmark color -- secondary text, muted accents */
+
+  --color-csf-purple-dark: #6B3175; /* derived: hover/active state for primary */
+  --color-csf-purple-light: #F4E9F6;/* derived: subtle backgrounds, selected states */
+
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  @apply bg-white text-neutral-900 antialiased;
+}
