@@ -1,6 +1,6 @@
 import type { components } from '../types/api'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export class ApiError extends Error {
   code: string
@@ -106,4 +106,9 @@ export function getWeeklyReport(weekStart: string, locationId?: string) {
 export function exportWeeklyCsv(weekStart: string, locationId?: string): Promise<string> {
   const qs = new URLSearchParams({ week_start: weekStart, ...(locationId ? { location_id: locationId } : {}) })
   return request<string>(`/reports/weekly/export.csv?${qs}`)
+}
+
+// --- Users (admin) ---
+export function listUsers() {
+  return request<components['schemas']['User'][]>('/users/')
 }

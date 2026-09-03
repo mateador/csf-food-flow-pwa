@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks'
+import { listUsers } from '../services/api'
 import type { components } from '../types/api'
 
 type User = components['schemas']['User']
@@ -9,18 +10,7 @@ export function AdminUsers() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    // services/api.ts doesn't have a listUsers() helper yet -- GET
-    // /users is live on the API (ADMIN-only, verified working) but wasn't
-    // wired into the typed client during this pass. Direct fetch here as
-    // an interim measure, same credentials:'include' requirement as the
-    // rest of the app.
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/users/`, {
-      credentials: 'include'
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error()
-        return res.json()
-      })
+    listUsers()
       .then(setUsers)
       .catch(() => setError(true))
       .finally(() => setLoading(false))
