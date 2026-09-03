@@ -26,7 +26,7 @@ export function NavBar() {
   return (
     <nav class="border-b border-neutral-200 bg-white px-4 py-3">
       <div class="mx-auto flex max-w-3xl items-center justify-between">
-        <Link href="/" class="text-lg font-semibold text-csf-purple">
+        <Link href="/" onClick={() => setMenuOpen(false)} class="text-lg font-semibold text-csf-purple">
           CSF
         </Link>
 
