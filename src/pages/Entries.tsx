@@ -36,7 +36,7 @@ export function Entries() {
           >
             <div>
               <div class="font-medium text-neutral-900">
-                {entry.entry_type === 'IN' ? 'Weigh In' : 'Weigh Out'} · {entry.food_category_code}
+                {entry.entry_type === 'IN' ? 'Weigh In' : 'Weigh Out'} · {entry.food_category_code} · {entry.name}
               </div>
               <div class="text-sm text-neutral-500">{entry.collection_date}</div>
             </div>

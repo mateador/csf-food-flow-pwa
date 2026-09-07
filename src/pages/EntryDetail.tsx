@@ -32,6 +32,10 @@ export function EntryDetail({ entryId }: { entryId: string }) {
       </h1>
       <dl class="space-y-2 text-sm">
         <div class="flex justify-between border-b border-neutral-100 py-2">
+          <dt class="text-neutral-500">Name</dt>
+          <dd class="text-neutral-900">{entry.name}</dd>
+        </div>
+        <div class="flex justify-between border-b border-neutral-100 py-2">
           <dt class="text-neutral-500">Category</dt>
           <dd class="text-neutral-900">{entry.food_category_code}</dd>
         </div>

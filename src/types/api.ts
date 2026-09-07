@@ -330,6 +330,8 @@ export interface components {
             location_id: string;
             /** Format: uuid */
             destination_location_id?: string | null;
+            /** @description Name/description of the item being weighed */
+            name: string;
             food_category_code: components["schemas"]["FoodCategoryCode"];
             weight_kg: number;
             /** Format: date */
@@ -694,6 +696,8 @@ export interface operations {
                     location_id: string;
                     /** Format: uuid */
                     destination_location_id?: string | null;
+                    /** @description Name/description of the item being weighed */
+                    name: string;
                     food_category_code: components["schemas"]["FoodCategoryCode"];
                     weight_kg: number;
                     /** Format: date */
@@ -737,6 +741,8 @@ export interface operations {
                         location_id: string;
                         /** Format: uuid */
                         destination_location_id?: string | null;
+                        /** @description Name/description of the item being weighed */
+                        name: string;
                         food_category_code: components["schemas"]["FoodCategoryCode"];
                         weight_kg: number;
                         /** Format: date */

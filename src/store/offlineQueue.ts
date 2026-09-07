@@ -8,6 +8,7 @@ export type QueuedEntry = {
   entry_type: 'IN' | 'OUT'
   location_id: string
   destination_location_id: string | null
+  name: string
   food_category_code: string
   weight_kg: number
   collection_date: string

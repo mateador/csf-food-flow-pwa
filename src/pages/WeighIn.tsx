@@ -16,6 +16,7 @@ export function WeighIn() {
   const [locations, setLocations] = useState<Location[]>([])
   const [categories, setCategories] = useState<FoodCategory[]>([])
   const [locationId, setLocationId] = useState('')
+  const [name, setName] = useState('')
   const [categoryCode, setCategoryCode] = useState('')
   const [weightKg, setWeightKg] = useState('')
   const [collectionDate, setCollectionDate] = useState(todayIso())
@@ -51,6 +52,7 @@ export function WeighIn() {
       entry_type: 'IN' as const,
       location_id: locationId,
       destination_location_id: null,
+      name: name.trim(),
       food_category_code: categoryCode,
       weight_kg: Number(weightKg),
       collection_date: collectionDate,
@@ -68,6 +70,7 @@ export function WeighIn() {
       await createEntry(result.data)
       setSaved(true)
       setWeightKg('')
+      setName('')
       setNotes('')
     } catch {
       // Offline (or the server is briefly unreachable, e.g. Render cold
@@ -76,6 +79,7 @@ export function WeighIn() {
       enqueueEntry(result.data)
       setSavedOffline(true)
       setWeightKg('')
+      setName('')
       setNotes('')
     } finally {
       setSubmitting(false)
@@ -140,6 +144,17 @@ export function WeighIn() {
             max={todayIso()}
             value={collectionDate}
             onInput={(e) => setCollectionDate((e.target as HTMLInputElement).value)}
+            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium text-neutral-700">Name</label>
+          <input
+            type="text"
+            required
+            value={name}
+            onInput={(e) => setName((e.target as HTMLInputElement).value)}
             class="w-full rounded-lg border border-neutral-300 px-3 py-2"
           />
         </div>
