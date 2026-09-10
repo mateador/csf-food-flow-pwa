@@ -61,7 +61,13 @@ export function listLocations() {
   return request<components['schemas']['Location'][]>('/locations/')
 }
 
+export function listTrayTypes() {
+  return request<components['schemas']['TrayType'][]>('/tray-types/')
+}
+
 // --- Entries ---
+type TrayInput = { tray_type_code: string; quantity: number }
+
 type CreateEntryBody = {
   client_uuid: string
   entry_type: 'IN' | 'OUT'
@@ -69,7 +75,8 @@ type CreateEntryBody = {
   destination_location_id: string | null
   name: string
   food_category_code: string
-  weight_kg: number
+  gross_weight_kg: number
+  trays: TrayInput[]
   collection_date: string
   notes: string | null
 }

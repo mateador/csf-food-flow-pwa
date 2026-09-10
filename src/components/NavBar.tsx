@@ -14,8 +14,8 @@ export function NavBar() {
   // mixed responsive classes, which gets fragile fast once a badge is
   // involved.
   const navItems = [
-    { href: '/weigh-in', label: 'Weigh In', show: true },
-    { href: '/weigh-out', label: 'Weigh Out', show: role === 'FOOD_CENTRE' || role === 'ADMIN' },
+    { href: '/weigh-in', label: 'Food In', show: true },
+    { href: '/weigh-out', label: 'Food Out', show: role === 'FOOD_CENTRE' || role === 'ADMIN' },
     { href: '/entries', label: 'Entries', show: true },
     { href: '/reports/weekly', label: 'Reports', show: true },
     { href: '/sync', label: 'Sync', show: true, badge: pendingCount > 0 ? pendingCount : undefined },

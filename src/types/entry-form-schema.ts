@@ -18,7 +18,29 @@
 import { z } from 'zod'
 
 export const entryTypeSchema = z.enum(['IN', 'OUT'])
-export const foodCategoryCodeSchema = z.enum(['FRESH', 'FROZEN', 'AMBIENT'])
+export const foodCategoryCodeSchema = z.enum([
+  'FRESH',
+  'FROZEN',
+  'AMBIENT',
+  'VEG_FRUIT',
+  'OTHER_FRESH',
+  'BAKERY'
+])
+export const trayTypeCodeSchema = z.enum([
+  'MEDIUM',
+  'LARGE',
+  'LARGE_COLLAPSIBLE',
+  'HALF_COLLAPSIBLE',
+  'MEDIUM_COLLAPSIBLE',
+  'LITTLE_COLLAPSIBLE',
+  'SMALL_COLLAPSIBLE',
+  'HALF_SOLID'
+])
+
+const traySchema = z.object({
+  tray_type_code: trayTypeCodeSchema,
+  quantity: z.number().int().positive('Tray quantity must be a positive whole number')
+})
 
 export const createEntrySchema = z
   .object({
@@ -28,10 +50,17 @@ export const createEntrySchema = z
     destination_location_id: z.string().uuid().nullable(),
     name: z.string().trim().min(1, 'Name is required'),
     food_category_code: foodCategoryCodeSchema,
-    weight_kg: z
+    gross_weight_kg: z
       .number()
       .positive('Weight must be greater than zero')
       .max(1000, 'Weight seems too high -- double-check the value'),
+    // Structural validation only (valid tray codes, positive integer
+    // quantities) -- whether the trays' combined weight actually fits
+    // under gross_weight_kg needs the live tray-weight data the form
+    // component fetches from GET /tray-types, so that check lives there,
+    // not in this static schema. The server is the final authority on it
+    // regardless.
+    trays: z.array(traySchema).default([]),
     collection_date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')

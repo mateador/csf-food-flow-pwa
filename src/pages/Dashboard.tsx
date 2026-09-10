@@ -18,7 +18,7 @@ export function Dashboard() {
           href="/weigh-in"
           class="rounded-xl border border-neutral-200 p-5 text-center hover:border-csf-purple"
         >
-          <div class="text-lg font-medium text-neutral-900">Weigh In</div>
+          <div class="text-lg font-medium text-neutral-900">Food In</div>
           <div class="text-sm text-neutral-500">Record surplus arriving</div>
         </Link>
         {(role === 'FOOD_CENTRE' || role === 'ADMIN') && (
@@ -26,7 +26,7 @@ export function Dashboard() {
             href="/weigh-out"
             class="rounded-xl border border-neutral-200 p-5 text-center hover:border-csf-purple"
           >
-            <div class="text-lg font-medium text-neutral-900">Weigh Out</div>
+            <div class="text-lg font-medium text-neutral-900">Food Out</div>
             <div class="text-sm text-neutral-500">Record parcels leaving</div>
           </Link>
         )}

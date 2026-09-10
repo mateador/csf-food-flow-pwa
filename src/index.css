@@ -18,3 +18,35 @@ html, body, #app {
 body {
   @apply bg-white text-neutral-900 antialiased;
 }
+
+/*
+ * High-contrast mode. Most of this app's color decisions are plain
+ * Tailwind utility classes directly in component markup (text-neutral-500,
+ * border-neutral-200, etc.) rather than semantic CSS variables, so a true
+ * per-component contrast variant would mean touching nearly every file.
+ * This is a scoped, pragmatic alternative: override the specific
+ * washed-out grays and thin borders that actually hurt readability, via
+ * attribute-selector overrides on the classes already in use, with zero
+ * changes to component markup. It is not a pixel-perfect WCAG-AAA reskin
+ * of every color decision in the app -- it targets the handful of
+ * choices that matter most (body text contrast, border visibility).
+ */
+[data-contrast='high'] {
+  --color-csf-purple: #5c1f66;
+}
+
+[data-contrast='high'] .text-neutral-400,
+[data-contrast='high'] .text-neutral-500 {
+  color: #000 !important;
+}
+
+[data-contrast='high'] .border-neutral-100,
+[data-contrast='high'] .border-neutral-200,
+[data-contrast='high'] .border-neutral-300 {
+  border-color: #000 !important;
+  border-width: 2px !important;
+}
+
+[data-contrast='high'] .bg-neutral-50 {
+  background-color: #ffffff !important;
+}

@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import { createEntrySchema } from '../types/entry-form-schema'
-import { createEntry, listCategories, listLocations } from '../services/api'
+import { createEntry, listCategories, listLocations, listTrayTypes } from '../services/api'
 import { enqueueEntry } from '../store/offlineQueue'
 import { currentUser } from '../store/session'
+import { TraySelector } from '../components/TraySelector'
+import { CategorySelector } from '../components/CategorySelector'
+import { getLastLocation, setLastLocation } from '../utils/lastLocation'
 import type { components } from '../types/api'
 
 type Location = components['schemas']['Location']
 type FoodCategory = components['schemas']['FoodCategory']
+type TrayType = components['schemas']['TrayType']
+
+const LAST_LOCATION_KEY = 'weigh-in'
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
@@ -15,10 +21,12 @@ function todayIso(): string {
 export function WeighIn() {
   const [locations, setLocations] = useState<Location[]>([])
   const [categories, setCategories] = useState<FoodCategory[]>([])
+  const [trayTypes, setTrayTypes] = useState<TrayType[]>([])
   const [locationId, setLocationId] = useState('')
   const [name, setName] = useState('')
   const [categoryCode, setCategoryCode] = useState('')
-  const [weightKg, setWeightKg] = useState('')
+  const [grossWeightKg, setGrossWeightKg] = useState('')
+  const [trayQuantities, setTrayQuantities] = useState<Record<string, number>>({})
   const [collectionDate, setCollectionDate] = useState(todayIso())
   const [notes, setNotes] = useState('')
   const [errors, setErrors] = useState<string[]>([])
@@ -31,6 +39,7 @@ export function WeighIn() {
   useEffect(() => {
     listLocations().then(setLocations).catch(() => {})
     listCategories().then(setCategories).catch(() => {})
+    listTrayTypes().then(setTrayTypes).catch(() => {})
   }, [])
 
   // HUB users can only ever weigh in at their own location -- lock it in
@@ -40,6 +49,39 @@ export function WeighIn() {
       setLocationId(currentUser.value.location_id)
     }
   }, [isHub])
+
+  // FOOD_CENTRE/ADMIN users re-pick a location every visit otherwise --
+  // default to whatever they used last time on this device, still fully
+  // overridable. Only applies once locations have actually loaded, so we
+  // don't default to a location that then turns out to not exist/be
+  // inactive.
+  useEffect(() => {
+    if (!isHub && !locationId && locations.length > 0) {
+      const remembered = getLastLocation(LAST_LOCATION_KEY)
+      if (remembered && locations.some((l) => l.id === remembered)) {
+        setLocationId(remembered)
+      }
+    }
+  }, [isHub, locations])
+
+  const trays = useMemo(
+    () =>
+      Object.entries(trayQuantities)
+        .filter(([, qty]) => qty > 0)
+        .map(([tray_type_code, quantity]) => ({ tray_type_code, quantity })),
+    [trayQuantities]
+  )
+
+  // Live preview only -- purely for the person's own feedback as they
+  // select trays. The server recomputes and stores the authoritative
+  // net_weight_kg itself; this number is never sent as-is.
+  const traysWeight = trays.reduce((sum, t) => {
+    const tray = trayTypes.find((tt) => tt.code === t.tray_type_code)
+    return sum + (tray ? tray.weight_kg * t.quantity : 0)
+  }, 0)
+  const grossNum = Number(grossWeightKg)
+  const netPreview = Number.isFinite(grossNum) ? grossNum - traysWeight : null
+  const netIsNegative = netPreview !== null && netPreview < 0
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault()
@@ -54,7 +96,8 @@ export function WeighIn() {
       destination_location_id: null,
       name: name.trim(),
       food_category_code: categoryCode,
-      weight_kg: Number(weightKg),
+      gross_weight_kg: Number(grossWeightKg),
+      trays,
       collection_date: collectionDate,
       notes: notes.trim() || null
     }
@@ -64,22 +107,30 @@ export function WeighIn() {
       setErrors(result.error.issues.map((i) => i.message))
       return
     }
+    if (netIsNegative) {
+      setErrors(['Selected trays weigh more than the gross weight entered -- check the weight and tray selection'])
+      return
+    }
 
     setSubmitting(true)
     try {
       await createEntry(result.data)
+      if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
       setSaved(true)
-      setWeightKg('')
       setName('')
+      setGrossWeightKg('')
+      setTrayQuantities({})
       setNotes('')
     } catch {
       // Offline (or the server is briefly unreachable, e.g. Render cold
       // start) -- queue it rather than lose the weigh-in. This is the
       // core offline-first behaviour the whole app is built around.
       enqueueEntry(result.data)
+      if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
       setSavedOffline(true)
-      setWeightKg('')
       setName('')
+      setGrossWeightKg('')
+      setTrayQuantities({})
       setNotes('')
     } finally {
       setSubmitting(false)
@@ -88,12 +139,25 @@ export function WeighIn() {
 
   return (
     <div class="mx-auto max-w-sm px-4 py-8">
-      <h1 class="mb-1 text-xl font-semibold text-neutral-900">Weigh In</h1>
+      <h1 class="mb-1 text-xl font-semibold text-neutral-900">Food In</h1>
       <p class="mb-6 text-sm text-neutral-500">Record surplus food arriving at a location.</p>
 
       {saved && (
-        <div class="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">
-          Saved. <a href="/entries" class="underline">View entries</a>
+        <div class="mb-4 flex items-center gap-3 rounded-xl bg-green-50 p-4 text-green-800">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="shrink-0">
+            <circle cx="12" cy="12" r="11" fill="currentColor" opacity="0.15" />
+            <path
+              d="M7 12.5l3 3 7-7.5"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div>
+            <p class="text-base font-semibold">Saved</p>
+            <a href="/entries" class="text-sm underline">View entries</a>
+          </div>
         </div>
       )}
       {savedOffline && (
@@ -153,6 +217,7 @@ export function WeighIn() {
           <input
             type="text"
             required
+            autoFocus
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
             class="w-full rounded-lg border border-neutral-300 px-3 py-2"
@@ -161,33 +226,38 @@ export function WeighIn() {
 
         <div>
           <label class="mb-1 block text-sm font-medium text-neutral-700">Category</label>
-          <select
-            required
-            value={categoryCode}
-            onInput={(e) => setCategoryCode((e.target as HTMLSelectElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.code} value={cat.code}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <CategorySelector categories={categories} value={categoryCode} onChange={setCategoryCode} />
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-medium text-neutral-700">Weight (kg)</label>
           <input
             type="number"
+            inputMode="decimal"
             step="0.1"
             min="0.1"
             max="1000"
             required
-            value={weightKg}
-            onInput={(e) => setWeightKg((e.target as HTMLInputElement).value)}
+            value={grossWeightKg}
+            onInput={(e) => setGrossWeightKg((e.target as HTMLInputElement).value)}
             class="w-full rounded-lg border border-neutral-300 px-3 py-2"
           />
+          <p class="mt-1 text-xs text-neutral-400">What the scale reads -- food and trays together.</p>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium text-neutral-700">Trays (optional)</label>
+          <TraySelector
+            trayTypes={trayTypes}
+            quantities={trayQuantities}
+            onChange={(code, qty) => setTrayQuantities((prev) => ({ ...prev, [code]: qty }))}
+          />
+          {trays.length > 0 && netPreview !== null && (
+            <p class={`mt-2 text-sm ${netIsNegative ? 'text-red-600' : 'text-neutral-600'}`}>
+              Net weight: <span class="font-medium">{netPreview.toFixed(1)} kg</span>
+              {netIsNegative && ' -- trays weigh more than the gross weight entered'}
+            </p>
+          )}
         </div>
 
         <div>

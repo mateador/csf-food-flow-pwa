@@ -7,6 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#8A4097" />
     <title>Cambridge Sustainable Food App</title>
+    <script>
+      // Applied before first paint, not inside the app bundle -- otherwise
+      // there'd be a visible flash of the default theme before Preact
+      // mounts and reads the same preference.
+      try {
+        if (localStorage.getItem('csf:contrast') === 'high') {
+          document.documentElement.setAttribute('data-contrast', 'high')
+        }
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

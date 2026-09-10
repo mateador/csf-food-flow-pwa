@@ -15,7 +15,8 @@ function sampleEntry(client_uuid: string) {
     destination_location_id: null,
     name: 'Tinned tomatoes',
     food_category_code: 'FRESH',
-    weight_kg: 5,
+    gross_weight_kg: 5,
+    trays: [],
     collection_date: '2026-08-01',
     notes: null
   }

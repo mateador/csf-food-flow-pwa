@@ -35,13 +35,13 @@ export function Entries() {
             class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3 hover:border-csf-purple"
           >
             <div>
-              <div class="font-medium text-neutral-900">
-                {entry.entry_type === 'IN' ? 'Weigh In' : 'Weigh Out'} · {entry.food_category_code} · {entry.name}
+              <div class="font-medium text-neutral-900">{entry.name}</div>
+              <div class="text-sm text-neutral-500">
+                {entry.entry_type === 'IN' ? 'Food In' : 'Food Out'} · {entry.food_category_code} · {entry.collection_date}
               </div>
-              <div class="text-sm text-neutral-500">{entry.collection_date}</div>
             </div>
             <div class="text-right">
-              <div class="font-medium text-neutral-900">{entry.weight_kg} kg</div>
+              <div class="font-medium text-neutral-900">{entry.net_weight_kg} kg</div>
               {entry.status === 'VOID' && (
                 <div class="text-xs text-red-600">Voided</div>
               )}

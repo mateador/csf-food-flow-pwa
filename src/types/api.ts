@@ -89,6 +89,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tray-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active tray types and their weights, for form dropdowns and net-weight calculation */
+        get: operations["listTrayTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations": {
         parameters: {
             query?: never;
@@ -294,7 +311,22 @@ export interface components {
         /** @enum {string} */
         LocationType: "HUB" | "FOOD_CENTRE";
         /** @enum {string} */
-        FoodCategoryCode: "FRESH" | "FROZEN" | "AMBIENT";
+        FoodCategoryCode: "FRESH" | "FROZEN" | "AMBIENT" | "VEG_FRUIT" | "OTHER_FRESH" | "BAKERY";
+        /** @enum {string} */
+        TrayTypeCode: "MEDIUM" | "LARGE" | "LARGE_COLLAPSIBLE" | "HALF_COLLAPSIBLE" | "MEDIUM_COLLAPSIBLE" | "LITTLE_COLLAPSIBLE" | "SMALL_COLLAPSIBLE" | "HALF_SOLID";
+        TrayType: {
+            code: components["schemas"]["TrayTypeCode"];
+            name: string;
+            weight_kg: number;
+            active: boolean;
+        };
+        EntryTray: {
+            tray_type_code: components["schemas"]["TrayTypeCode"];
+            tray_type_name: string;
+            quantity: number;
+            /** @description Per-tray weight at the time this entry was recorded. */
+            weight_kg: number;
+        };
         User: {
             /** Format: uuid */
             id: string;
@@ -333,7 +365,11 @@ export interface components {
             /** @description Name/description of the item being weighed */
             name: string;
             food_category_code: components["schemas"]["FoodCategoryCode"];
-            weight_kg: number;
+            /** @description What the scale reads -- food and trays together. */
+            gross_weight_kg: number;
+            /** @description gross_weight_kg minus the combined weight of the trays listed. */
+            net_weight_kg: number;
+            trays: components["schemas"]["EntryTray"][];
             /** Format: date */
             collection_date: string;
             notes?: string | null;
@@ -551,6 +587,27 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
         };
     };
+    listTrayTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrayType"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
     listLocations: {
         parameters: {
             query?: {
@@ -699,7 +756,13 @@ export interface operations {
                     /** @description Name/description of the item being weighed */
                     name: string;
                     food_category_code: components["schemas"]["FoodCategoryCode"];
-                    weight_kg: number;
+                    /** @description What the scale reads -- food and trays together. */
+                    gross_weight_kg: number;
+                    /** @description Optional. net_weight_kg is computed server-side as gross_weight_kg minus the sum of (quantity * that tray type's current weight) for every entry here -- never trust a client-submitted net figure. */
+                    trays?: {
+                        tray_type_code: components["schemas"]["TrayTypeCode"];
+                        quantity: number;
+                    }[];
                     /** Format: date */
                     collection_date: string;
                     notes?: string | null;
@@ -744,7 +807,11 @@ export interface operations {
                         /** @description Name/description of the item being weighed */
                         name: string;
                         food_category_code: components["schemas"]["FoodCategoryCode"];
-                        weight_kg: number;
+                        gross_weight_kg: number;
+                        trays?: {
+                            tray_type_code: components["schemas"]["TrayTypeCode"];
+                            quantity: number;
+                        }[];
                         /** Format: date */
                         collection_date: string;
                         notes?: string | null;

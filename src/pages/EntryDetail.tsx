@@ -28,7 +28,7 @@ export function EntryDetail({ entryId }: { entryId: string }) {
         ← Back to entries
       </a>
       <h1 class="mb-4 text-xl font-semibold text-neutral-900">
-        {entry.entry_type === 'IN' ? 'Weigh In' : 'Weigh Out'}
+        {entry.entry_type === 'IN' ? 'Food In' : 'Food Out'}
       </h1>
       <dl class="space-y-2 text-sm">
         <div class="flex justify-between border-b border-neutral-100 py-2">
@@ -40,8 +40,24 @@ export function EntryDetail({ entryId }: { entryId: string }) {
           <dd class="text-neutral-900">{entry.food_category_code}</dd>
         </div>
         <div class="flex justify-between border-b border-neutral-100 py-2">
-          <dt class="text-neutral-500">Weight</dt>
-          <dd class="text-neutral-900">{entry.weight_kg} kg</dd>
+          <dt class="text-neutral-500">Gross weight</dt>
+          <dd class="text-neutral-900">{entry.gross_weight_kg} kg</dd>
+        </div>
+        {entry.trays.length > 0 && (
+          <div class="border-b border-neutral-100 py-2">
+            <dt class="mb-1 text-neutral-500">Trays</dt>
+            <dd class="space-y-0.5 text-neutral-900">
+              {entry.trays.map((t) => (
+                <div key={t.tray_type_code}>
+                  {t.quantity}× {t.tray_type_name} ({t.weight_kg} kg each)
+                </div>
+              ))}
+            </dd>
+          </div>
+        )}
+        <div class="flex justify-between border-b border-neutral-100 py-2">
+          <dt class="text-neutral-500">Net weight</dt>
+          <dd class="font-medium text-neutral-900">{entry.net_weight_kg} kg</dd>
         </div>
         <div class="flex justify-between border-b border-neutral-100 py-2">
           <dt class="text-neutral-500">Collection date</dt>

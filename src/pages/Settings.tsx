@@ -1,4 +1,5 @@
 import { currentUser, clearSession } from '../store/session'
+import { highContrast, setHighContrast } from '../store/theme'
 import { route } from 'preact-router'
 
 export function Settings() {
@@ -32,6 +33,28 @@ export function Settings() {
           <span class="text-neutral-500">Role</span>
           <span class="text-neutral-900">{user?.role}</span>
         </div>
+      </div>
+
+      <div class="mb-6 flex items-center justify-between rounded-lg border border-neutral-200 p-4">
+        <div>
+          <p class="text-sm font-medium text-neutral-900">High contrast</p>
+          <p class="text-xs text-neutral-500">Darker text and borders, easier to read in bright light.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={highContrast.value}
+          onClick={() => setHighContrast(!highContrast.value)}
+          class={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+            highContrast.value ? 'bg-csf-purple' : 'bg-neutral-300'
+          }`}
+        >
+          <span
+            class={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+              highContrast.value ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
 
       <div class="mb-6 rounded-lg border border-neutral-200 p-4 text-sm text-neutral-600">

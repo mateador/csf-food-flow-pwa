@@ -54,7 +54,7 @@ export function Sync() {
                 class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-2 text-sm"
               >
                 <span>
-                  {entry.entry_type} · {entry.food_category_code} · {entry.weight_kg}kg
+                  {entry.entry_type} · {entry.food_category_code} · {entry.gross_weight_kg}kg
                 </span>
                 <span class="text-neutral-400">{entry.collection_date}</span>
               </div>
@@ -74,7 +74,7 @@ export function Sync() {
               >
                 <div class="flex items-center justify-between">
                   <span>
-                    {entry.entry_type} · {entry.food_category_code} · {entry.weight_kg}kg
+                    {entry.entry_type} · {entry.food_category_code} · {entry.gross_weight_kg}kg
                   </span>
                   <button
                     onClick={() => removeFromQueue(entry.client_uuid)}
