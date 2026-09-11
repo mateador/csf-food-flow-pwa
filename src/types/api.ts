@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/magic-link/request": {
+    "/auth/code/request": {
         parameters: {
             query?: never;
             header?: never;
@@ -30,15 +30,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start passwordless sign-in by emailing a one-time magic link */
-        post: operations["requestMagicLink"];
+        /** Start passwordless sign-in by emailing a 4-digit one-time code */
+        post: operations["requestLoginCode"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/magic-link/verify": {
+    "/auth/code/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -47,8 +47,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Validate a one-time magic-link token and establish a session */
-        post: operations["verifyMagicLink"];
+        /** Validate a 4-digit one-time code and establish a session */
+        post: operations["verifyLoginCode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -478,7 +478,7 @@ export interface operations {
             };
         };
     };
-    requestMagicLink: {
+    requestLoginCode: {
         parameters: {
             query?: never;
             header?: never;
@@ -494,7 +494,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Always a generic success, whether or not the email exists or is active, to avoid user enumeration. */
+            /** @description Always a generic success, whether or not the email exists, is active, or is currently rate-limited, to avoid user enumeration. Rate limit: at most 3 code requests per user per 10-minute window; requests beyond that silently do not send a new code but still return this same response. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -508,7 +508,7 @@ export interface operations {
             };
         };
     };
-    verifyMagicLink: {
+    verifyLoginCode: {
         parameters: {
             query?: never;
             header?: never;
@@ -518,12 +518,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    token: string;
+                    /** Format: email */
+                    email: string;
+                    /** @description The 4-digit code emailed to this address. */
+                    code: string;
                 };
             };
         };
         responses: {
-            /** @description Sets the httpOnly session cookie via Set-Cookie. Response body does not include the token itself. */
+            /** @description Sets the httpOnly session cookie via Set-Cookie. Response body does not include the code itself. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -534,7 +537,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Token expired, already used, or invalid */
+            /** @description Code incorrect, expired, or locked out after too many wrong attempts (5 max per issued code) -- error.code distinguishes INVALID_CODE, EXPIRED, and TOO_MANY_ATTEMPTS. */
             401: {
                 headers: {
                     [name: string]: unknown;

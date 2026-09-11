@@ -34,17 +34,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 // --- Auth ---
-export function requestMagicLink(email: string) {
-  return request<{ status: string }>('/auth/magic-link/request', {
+export function requestLoginCode(email: string) {
+  return request<{ status: string }>('/auth/code/request', {
     method: 'POST',
     body: JSON.stringify({ email })
   })
 }
 
-export function verifyMagicLink(token: string) {
-  return request<{ user: components['schemas']['User'] }>('/auth/magic-link/verify', {
+export function verifyLoginCode(email: string, code: string) {
+  return request<{ user: components['schemas']['User'] }>('/auth/code/verify', {
     method: 'POST',
-    body: JSON.stringify({ token })
+    body: JSON.stringify({ email, code })
   })
 }
 

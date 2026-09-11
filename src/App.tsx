@@ -4,7 +4,6 @@ import type { ComponentChildren } from 'preact'
 import { currentUser, sessionLoading, loadSession } from './store/session'
 
 import { Login } from './pages/Login'
-import { AuthVerify } from './pages/AuthVerify'
 import { Dashboard } from './pages/Dashboard'
 import { WeighIn } from './pages/WeighIn'
 import { WeighOut } from './pages/WeighOut'
@@ -54,7 +53,6 @@ export function App() {
       {currentUser.value && <NavBar />}
       <Router>
         <Route path="/login" component={Login} />
-        <Route path="/auth/verify" component={AuthVerify} />
         <Route
           path="/"
           component={() => (
