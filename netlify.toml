@@ -10,9 +10,10 @@
 # before the /* SPA catch-all below, since redirect rules are evaluated
 # top-to-bottom and the catch-all would otherwise swallow /api/* requests
 # and serve index.html instead of proxying them.
+# 2026-09-17: previous server - https://csf-food-flow-api.onrender.com
 [[redirects]]
   from = "/api/*"
-  to = "https://csf-food-flow-api.onrender.com/api/:splat"
+  to = "https://csf-api.bravebush-24fde88f.uksouth.azurecontainerapps.io/api/:splat"
   status = 200
   force = true
 
