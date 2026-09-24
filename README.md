@@ -79,15 +79,23 @@ npm run preview  # serve the production build locally to sanity-check it
 
 ## Deployment Notes
 
-**PWA → Netlify** (`netlify.toml` provided, includes SPA fallback):
-1. Push this repo to GitHub
-2. Netlify → Add new site → import this repo (reads `netlify.toml`
-   automatically for build command/publish directory)
-3. Before the first deploy, set a build environment variable:
-   `VITE_API_URL` = your deployed Render API URL
-4. After deploy, go back to the API's Render dashboard and set its
-   `CORS_ORIGIN` to this Netlify URL exactly (not a wildcard — the cookie
-   auth model requires it)
+**PWA → Netlify** (`netlify.toml` provided):
+1. Netlify → Add new site → import this repo. It reads `netlify.toml`
+   for the build command, publish directory, SPA fallback and API proxy.
+2. **Do not set `VITE_API_URL`** in Netlify. With it unset, the client
+   calls the relative path `/api/v1`, and `netlify.toml` proxies `/api/*`
+   to the API on Azure Container Apps server-side. The browser only ever
+   talks to the PWA's own origin, which keeps the session cookie
+   first-party in Safari and private browsing.
+3. If the API's URL changes, update the `to =` line of the `/api/*`
+   redirect in `netlify.toml`. That is the only place it lives.
+4. In the API's Azure Container Apps configuration, set `CORS_ORIGIN` to
+   this site's exact Netlify URL (not a wildcard).
+
+**API → Azure Container Apps**: see `csf-food-flow-api`'s README. The API
+scales to zero when idle, so the first request after a quiet period can
+be slow. Entries recorded during that window are queued offline and sync
+automatically.
 
 **Database → Neon**: no PWA-side deployment step; the PWA only talks to
 the API, never directly to the database.

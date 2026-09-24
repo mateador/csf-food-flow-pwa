@@ -4,7 +4,7 @@
 
 # Same-origin API proxy. status=200 (not a 3xx) makes this a server-side
 # rewrite, not a browser redirect -- the browser never sees or connects to
-# the Render URL directly. Netlify's edge fetches it and returns the
+# the API's URL directly. Netlify's edge fetches it and returns the
 # response as if it came from this site's own origin, which is what makes
 # the session cookie first-party instead of cross-site. This MUST come
 # before the /* SPA catch-all below, since redirect rules are evaluated

@@ -122,9 +122,9 @@ export function WeighIn() {
       setTrayQuantities({})
       setNotes('')
     } catch {
-      // Offline (or the server is briefly unreachable, e.g. Render cold
-      // start) -- queue it rather than lose the weigh-in. This is the
-      // core offline-first behaviour the whole app is built around.
+      // Offline (or the server is briefly unreachable, e.g. a cold start
+      // after the API scales to zero) -- queue it rather than lose the
+      // weigh-in. This is the core offline-first behaviour the whole app is built around.
       enqueueEntry(result.data)
       if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
       setSavedOffline(true)
