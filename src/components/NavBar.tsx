@@ -1,11 +1,13 @@
 import { useState } from 'preact/hooks'
 import { Link } from './RouterLink'
 import { currentUser } from '../store/session'
-import { offlineQueue } from '../store/offlineQueue'
+import { pendingFor } from '../store/offlineQueue'
 
 export function NavBar() {
   const role = currentUser.value?.role
-  const pendingCount = offlineQueue.value.length
+  // Only this person's waiting entries -- on a shared tablet, other
+  // volunteers' entries aren't theirs to upload.
+  const pendingCount = currentUser.value ? pendingFor(currentUser.value.id).length : 0
   const [menuOpen, setMenuOpen] = useState(false)
 
   // Single source of truth for the link list -- rendered two different

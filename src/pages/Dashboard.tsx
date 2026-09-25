@@ -1,10 +1,10 @@
 import { Link } from '../components/RouterLink'
 import { currentUser } from '../store/session'
-import { offlineQueue } from '../store/offlineQueue'
+import { pendingFor } from '../store/offlineQueue'
 
 export function Dashboard() {
   const role = currentUser.value?.role
-  const pending = offlineQueue.value.length
+  const pending = currentUser.value ? pendingFor(currentUser.value.id).length : 0
 
   return (
     <div class="mx-auto max-w-3xl px-4 py-8">

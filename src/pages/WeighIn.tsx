@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { createEntrySchema } from '../types/entry-form-schema'
-import { createEntry, listCategories, listLocations, listTrayTypes } from '../services/api'
-import { enqueueEntry } from '../store/offlineQueue'
+import { submitEntry } from '../services/submitEntry'
+import { getCategories, getLocations, getTrayTypes } from '../store/referenceData'
+import { RecordingAs } from '../components/RecordingAs'
 import { currentUser } from '../store/session'
 import { TraySelector } from '../components/TraySelector'
 import { CategorySelector } from '../components/CategorySelector'
@@ -37,9 +38,10 @@ export function WeighIn() {
   const isHub = currentUser.value?.role === 'HUB'
 
   useEffect(() => {
-    listLocations().then(setLocations).catch(() => {})
-    listCategories().then(setCategories).catch(() => {})
-    listTrayTypes().then(setTrayTypes).catch(() => {})
+    // Device copies are used when there's no connection -- see referenceData.ts
+    getLocations().then(setLocations).catch(() => {})
+    getCategories().then(setCategories).catch(() => {})
+    getTrayTypes().then(setTrayTypes).catch(() => {})
   }, [])
 
   // HUB users can only ever weigh in at their own location -- lock it in
@@ -114,20 +116,18 @@ export function WeighIn() {
 
     setSubmitting(true)
     try {
-      await createEntry(result.data)
+      const user = currentUser.value!
+      const outcome = await submitEntry(result.data, { id: user.id, name: user.name })
+      if (outcome.kind === 'rejected') {
+        // The server looked at it and said no. Keep the form filled in so
+        // it can be corrected -- nothing was saved anywhere.
+        setErrors([outcome.message])
+        return
+      }
+      if (outcome.kind === 'signed_out') return // sessionEnded() has moved to sign-in
       if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
-      setSaved(true)
-      setName('')
-      setGrossWeightKg('')
-      setTrayQuantities({})
-      setNotes('')
-    } catch {
-      // Offline (or the server is briefly unreachable, e.g. a cold start
-      // after the API scales to zero) -- queue it rather than lose the
-      // weigh-in. This is the core offline-first behaviour the whole app is built around.
-      enqueueEntry(result.data)
-      if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
-      setSavedOffline(true)
+      if (outcome.kind === 'saved') setSaved(true)
+      else setSavedOffline(true)
       setName('')
       setGrossWeightKg('')
       setTrayQuantities({})
@@ -141,6 +141,8 @@ export function WeighIn() {
     <div class="mx-auto max-w-sm px-4 py-8">
       <h1 class="mb-1 text-xl font-semibold text-neutral-900">Food In</h1>
       <p class="mb-6 text-sm text-neutral-500">Record surplus food arriving at a location.</p>
+
+      <RecordingAs />
 
       {saved && (
         <div class="mb-4 flex items-center gap-3 rounded-xl bg-green-50 p-4 text-green-800">
@@ -162,8 +164,9 @@ export function WeighIn() {
       )}
       {savedOffline && (
         <div class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-          No connection right now -- saved on this device and will sync automatically.{' '}
-          <a href="/sync" class="underline">View sync queue</a>
+          No connection right now -- saved on this device. It uploads automatically when the
+          connection is back.{' '}
+          <a href="/sync" class="underline">View waiting entries</a>
         </div>
       )}
       {errors.length > 0 && (

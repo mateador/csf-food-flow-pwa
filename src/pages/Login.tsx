@@ -1,7 +1,10 @@
 import { useState } from 'preact/hooks'
 import { route } from 'preact-router'
-import { requestLoginCode, verifyLoginCode, ApiError } from '../services/api'
-import { currentUser } from '../store/session'
+import { requestLoginCode, verifyLoginCode, ApiError, isUnreachable } from '../services/api'
+import { signedIn, signInNotice } from '../store/session'
+import { requestSync } from '../store/autoSync'
+
+const NO_CONNECTION = 'No connection. Signing in needs a connection -- try again when you have signal.'
 
 /**
  * Two-step flow on a single page/route, not a separate page a link
@@ -26,12 +29,19 @@ export function Login() {
     setError('')
     try {
       await requestLoginCode(email.trim())
-    } finally {
-      // Always move on to the code step regardless of outcome -- the API
-      // deliberately never reveals whether the email exists, so the UI
-      // shouldn't either.
-      setLoading(false)
       setStep('code')
+    } catch (err) {
+      if (isUnreachable(err)) {
+        // No code can have been sent, so don't send them to wait for one.
+        setError(NO_CONNECTION)
+      } else {
+        // Any answer from the server moves on to the code step -- the API
+        // deliberately never reveals whether the email exists, so the UI
+        // shouldn't either.
+        setStep('code')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -42,9 +52,15 @@ export function Login() {
     setError('')
     try {
       const { user } = await verifyLoginCode(email.trim(), code.trim())
-      currentUser.value = user
+      signedIn(user)
+      // Upload anything this person recorded here while signed out.
+      void requestSync()
       route('/', true)
     } catch (err) {
+      if (isUnreachable(err)) {
+        setError(NO_CONNECTION)
+        return // keep the code -- it's still valid
+      }
       if (err instanceof ApiError && err.code === 'TOO_MANY_ATTEMPTS') {
         setError('Too many incorrect attempts. Request a new code below.')
       } else if (err instanceof ApiError && err.code === 'EXPIRED') {
@@ -66,6 +82,14 @@ export function Login() {
         {step === 'email' ? (
           <>
             <p class="mb-6 text-neutral-500">Sign in with your email to continue.</p>
+            {signInNotice.value && (
+              <div class="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+                {signInNotice.value}
+              </div>
+            )}
+            {error && (
+              <div class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
+            )}
             <form onSubmit={handleRequestCode} class="space-y-3">
               <input
                 type="email"

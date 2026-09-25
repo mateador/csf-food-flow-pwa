@@ -1,19 +1,22 @@
-import { currentUser, clearSession } from '../store/session'
+import { useState } from 'preact/hooks'
+import { currentUser } from '../store/session'
+import { syncThenSignOut } from '../store/autoSync'
+import { pendingFor } from '../store/offlineQueue'
 import { highContrast, setHighContrast } from '../store/theme'
-import { route } from 'preact-router'
 
 export function Settings() {
   const user = currentUser.value
 
-  const handleSignOut = () => {
-    // No server-side sign-out endpoint is in the V1 contract (no DELETE
-    // /me/session or similar) -- clearing local state is enough for now
-    // since the httpOnly cookie simply expires after ACCESS_TOKEN_TTL.
-    // A real "sign out everywhere" would need a server-side revoke list,
-    // worth flagging as a V2 gap rather than pretending this fully signs
-    // the session out server-side.
-    clearSession()
-    route('/login', true)
+  const [signingOut, setSigningOut] = useState(false)
+  const waiting = user ? pendingFor(user.id).length : 0
+
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    // Uploads this person's waiting entries first, then expires the session
+    // cookie on the server -- clearing local state alone would leave the
+    // cookie valid, and on a shared tablet the next volunteer would be
+    // signed in as this one.
+    await syncThenSignOut()
   }
 
   return (
@@ -65,11 +68,20 @@ export function Settings() {
         </p>
       </div>
 
+      {waiting > 0 && (
+        <p class="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          You have {waiting} {waiting === 1 ? 'entry' : 'entries'} waiting to upload. Signing out
+          tries to upload {waiting === 1 ? 'it' : 'them'} first; anything that can't go now uploads
+          the next time you sign in on this device.
+        </p>
+      )}
+
       <button
         onClick={handleSignOut}
-        class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
+        disabled={signingOut}
+        class="w-full rounded-lg border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
       >
-        Sign out
+        {signingOut ? 'Signing out…' : 'Sign out'}
       </button>
     </div>
   )

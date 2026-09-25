@@ -25,21 +25,16 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // App shell: cache-first. API requests are handled with a
-        // network-first strategy so authenticated/operational data is
-        // never served stale without at least attempting a live fetch.
+        // App shell only: cache-first, so the app opens with no connection.
+        //
+        // API responses are deliberately NOT cached by the service worker.
+        // On a shared tablet a cached /me would bring the previous
+        // volunteer back after sign-out. The data the forms need offline
+        // (locations, categories, tray types, the signed-in user) is kept
+        // by the app itself and cleared on sign-out -- see
+        // src/store/referenceData.ts and src/store/session.ts.
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url, sameOrigin }) => !sameOrigin && url.pathname.startsWith('/api/'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 5,
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 } // 1 day
-            }
-          }
-        ]
+        navigateFallbackDenylist: [/^\/api\//]
       },
       devOptions: {
         enabled: true

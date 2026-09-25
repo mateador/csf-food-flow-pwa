@@ -2,6 +2,7 @@ import type { components } from '../types/api'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
+/** The server answered, and refused or failed the request. */
 export class ApiError extends Error {
   code: string
   status: number
@@ -12,12 +13,42 @@ export class ApiError extends Error {
   }
 }
 
+/** The request never got an answer: no connection, DNS failure, dropped
+ * mid-flight. fetch() signals this by rejecting with a TypeError, which is
+ * too generic to act on, so it's rewrapped here. */
+export class NetworkError extends Error {
+  constructor(cause?: unknown) {
+    super('No connection to the server')
+    this.name = 'NetworkError'
+    this.cause = cause
+  }
+}
+
+/**
+ * True when the failure is about reaching the server rather than about the
+ * request itself: no connection, or a 5xx such as a cold start, a proxy
+ * timeout or a crash. Worth keeping the data and retrying later. Anything
+ * else (4xx) is the server saying no, and retrying won't change that.
+ */
+export function isUnreachable(err: unknown): boolean {
+  return err instanceof NetworkError || (err instanceof ApiError && err.status >= 500)
+}
+
+export function isUnauthorized(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 401
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}/api/v1${path}`, {
-    ...options,
-    credentials: 'include', // required for the httpOnly session cookie cross-origin
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
-  })
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/api/v1${path}`, {
+      ...options,
+      credentials: 'include', // send the httpOnly session cookie
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    })
+  } catch (err) {
+    throw new NetworkError(err)
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)
@@ -46,6 +77,12 @@ export function verifyLoginCode(email: string, code: string) {
     method: 'POST',
     body: JSON.stringify({ email, code })
   })
+}
+
+/** Expires the session cookie on this device. The browser can't delete an
+ * httpOnly cookie itself, so signing out has to go through the server. */
+export function logout() {
+  return request<{ status: string }>('/auth/logout', { method: 'POST' })
 }
 
 export function getMe() {

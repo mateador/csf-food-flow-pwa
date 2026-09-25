@@ -2,6 +2,7 @@ import { Router, Route, route } from 'preact-router'
 import { useEffect } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { currentUser, sessionLoading, loadSession } from './store/session'
+import { requestSync, startAutoSync } from './store/autoSync'
 
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
@@ -45,7 +46,11 @@ function AdminOnly({ children }: { children: ComponentChildren }) {
 
 export function App() {
   useEffect(() => {
-    loadSession()
+    const stopAutoSync = startAutoSync()
+    // Confirm who's signed in (or carry on as them offline), then upload
+    // anything left waiting from last time.
+    loadSession().then(() => requestSync())
+    return stopAutoSync
   }, [])
 
   return (

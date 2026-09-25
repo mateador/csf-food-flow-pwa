@@ -1,34 +1,68 @@
 import { useState } from 'preact/hooks'
-import { offlineQueue, removeFromQueue, syncOfflineQueue } from '../store/offlineQueue'
+import {
+  failedFor,
+  pendingFor,
+  removeFromQueue,
+  waitingForOthers,
+  type QueuedEntry
+} from '../store/offlineQueue'
+import { lastSyncProblem, requestSync } from '../store/autoSync'
+import { currentUser, sessionOffline } from '../store/session'
+
+function EntryLine({ entry }: { entry: QueuedEntry }) {
+  return (
+    <>
+      <span>
+        {entry.entry_type} · {entry.name} · {entry.food_category_code} · {entry.gross_weight_kg}kg
+      </span>
+      <span class="text-neutral-400">{entry.collection_date}</span>
+    </>
+  )
+}
 
 export function Sync() {
   const [syncing, setSyncing] = useState(false)
-  const [lastResult, setLastResult] = useState<{ synced: number; failed: number } | null>(null)
+  const user = currentUser.value
+  if (!user) return null
+
+  const pending = pendingFor(user.id)
+  const failed = failedFor(user.id)
+  const others = waitingForOthers(user.id)
+
+  // Group other volunteers' entries by who recorded them.
+  const othersByName = new Map<string, number>()
+  for (const e of others) {
+    const who = e.queued_by_name ?? 'another volunteer'
+    othersByName.set(who, (othersByName.get(who) ?? 0) + 1)
+  }
 
   const handleSync = async () => {
     setSyncing(true)
     try {
-      const result = await syncOfflineQueue()
-      setLastResult(result)
+      await requestSync()
     } finally {
       setSyncing(false)
     }
   }
 
-  const pending = offlineQueue.value.filter((e) => !e.sync_error)
-  const failed = offlineQueue.value.filter((e) => e.sync_error)
+  const nothingHere = pending.length === 0 && failed.length === 0 && others.length === 0
 
   return (
     <div class="mx-auto max-w-3xl px-4 py-8">
       <h1 class="mb-1 text-xl font-semibold text-neutral-900">Sync</h1>
       <p class="mb-6 text-sm text-neutral-500">
-        Entries recorded while offline are saved on this device and sync automatically. You can
-        also trigger a sync manually.
+        Entries recorded without a connection are kept on this device and upload automatically when
+        the connection is back. You can also upload them now.
       </p>
 
-      {lastResult && (
-        <div class="mb-4 rounded-lg bg-neutral-50 p-3 text-sm text-neutral-700">
-          Last sync: {lastResult.synced} synced, {lastResult.failed} failed.
+      {sessionOffline.value && (
+        <div class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          No connection right now. Waiting entries will upload when it's back.
+        </div>
+      )}
+      {!sessionOffline.value && lastSyncProblem.value && pending.length > 0 && (
+        <div class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          {lastSyncProblem.value}
         </div>
       )}
 
@@ -37,26 +71,21 @@ export function Sync() {
         disabled={syncing || pending.length === 0}
         class="mb-6 rounded-lg bg-csf-purple px-4 py-2 font-medium text-white disabled:opacity-50"
       >
-        {syncing ? 'Syncing…' : `Sync now (${pending.length} pending)`}
+        {syncing ? 'Uploading…' : `Upload now (${pending.length} waiting)`}
       </button>
 
-      {offlineQueue.value.length === 0 && (
-        <p class="text-neutral-500">Nothing queued. Everything's synced.</p>
-      )}
+      {nothingHere && <p class="text-neutral-500">Nothing waiting. Everything's uploaded.</p>}
 
       {pending.length > 0 && (
         <div class="mb-6">
-          <h2 class="mb-2 font-medium text-neutral-900">Pending ({pending.length})</h2>
+          <h2 class="mb-2 font-medium text-neutral-900">Waiting to upload ({pending.length})</h2>
           <div class="space-y-2">
             {pending.map((entry) => (
               <div
                 key={entry.client_uuid}
-                class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-2 text-sm"
+                class="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 px-4 py-2 text-sm"
               >
-                <span>
-                  {entry.entry_type} · {entry.food_category_code} · {entry.gross_weight_kg}kg
-                </span>
-                <span class="text-neutral-400">{entry.collection_date}</span>
+                <EntryLine entry={entry} />
               </div>
             ))}
           </div>
@@ -64,18 +93,20 @@ export function Sync() {
       )}
 
       {failed.length > 0 && (
-        <div>
-          <h2 class="mb-2 font-medium text-red-700">Failed ({failed.length})</h2>
+        <div class="mb-6">
+          <h2 class="mb-2 font-medium text-red-700">Refused by the server ({failed.length})</h2>
+          <p class="mb-2 text-sm text-neutral-600">
+            These won't upload as they are. Record them again with the details corrected, then
+            discard the original.
+          </p>
           <div class="space-y-2">
             {failed.map((entry) => (
               <div
                 key={entry.client_uuid}
                 class="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm"
               >
-                <div class="flex items-center justify-between">
-                  <span>
-                    {entry.entry_type} · {entry.food_category_code} · {entry.gross_weight_kg}kg
-                  </span>
+                <div class="flex items-center justify-between gap-3">
+                  <EntryLine entry={entry} />
                   <button
                     onClick={() => removeFromQueue(entry.client_uuid)}
                     class="text-xs text-red-600 underline"
@@ -87,6 +118,24 @@ export function Sync() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <div>
+          <h2 class="mb-2 font-medium text-neutral-900">
+            Recorded by other volunteers ({others.length})
+          </h2>
+          <p class="mb-2 text-sm text-neutral-600">
+            These upload the next time the person who recorded them signs in on this device.
+          </p>
+          <ul class="space-y-1 text-sm text-neutral-700">
+            {[...othersByName.entries()].map(([who, count]) => (
+              <li key={who}>
+                {who}: {count} {count === 1 ? 'entry' : 'entries'}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

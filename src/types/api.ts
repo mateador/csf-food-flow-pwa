@@ -55,6 +55,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End the session on this device
+         * @description Expires the httpOnly session cookie (Set-Cookie with Max-Age=0). The browser cannot remove an httpOnly cookie itself, so clients must call this to sign out -- essential on shared devices. Always succeeds, including when there is no session.
+         */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -553,6 +573,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session cookie expired */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "signed_out";
+                    };
                 };
             };
         };
