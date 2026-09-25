@@ -395,10 +395,19 @@ export interface components {
                 message: string;
             };
         };
+        /**
+         * @description Net weight in kg, keyed by food category code. Every active category is present (0 when unused). A retired category appears only in a week that has entries in it. Values are rounded to 2 decimal places.
+         * @example {
+         *       "FRESH": 12.4,
+         *       "FROZEN": 0,
+         *       "AMBIENT": 3.75,
+         *       "VEG_FRUIT": 0,
+         *       "OTHER_FRESH": 0,
+         *       "BAKERY": 1.2
+         *     }
+         */
         CategoryTotals: {
-            FRESH?: number;
-            FROZEN?: number;
-            AMBIENT?: number;
+            [key: string]: number;
         };
         WeeklyReport: {
             /** Format: date */
@@ -428,7 +437,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
-        /** @description Missing or invalid session */
+        /** @description Missing or invalid session, or the account has been deactivated */
         Unauthorized: {
             headers: {
                 [name: string]: unknown;
