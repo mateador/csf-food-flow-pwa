@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Confirm the API can serve users (reaches the database)
+         * @description For uptime monitoring and deploy checks only -- it wakes the database if it has scaled to zero, so clients should not call it.
+         */
+        get: operations["getReadiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/code/request": {
         parameters: {
             query?: never;
@@ -502,6 +522,45 @@ export interface operations {
                         /** @enum {string} */
                         status: "ok";
                         version: string;
+                    };
+                };
+            };
+        };
+    };
+    getReadiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "ok";
+                        /** @enum {string} */
+                        database: "ok";
+                    };
+                };
+            };
+            /** @description The database can't be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "unavailable";
+                        /** @enum {string} */
+                        database: "unreachable";
                     };
                 };
             };
