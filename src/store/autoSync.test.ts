@@ -13,7 +13,8 @@ const session = vi.hoisted(() => ({
   sessionOffline: null as unknown as ReturnType<typeof signal<boolean>>,
   loadSession: vi.fn(),
   sessionEnded: vi.fn(),
-  signOut: vi.fn()
+  signOut: vi.fn(),
+  SESSION_ENDED_MESSAGE: 'signed out message'
 }))
 vi.mock('./session', async () => {
   const { signal } = await import('@preact/signals')
@@ -25,13 +26,8 @@ vi.mock('./session', async () => {
 import { route } from 'preact-router'
 import { ApiError, NetworkError, bulkSyncEntries } from '../services/api'
 import { enqueueEntry, offlineQueue } from './offlineQueue'
-import {
-  SESSION_ENDED_MESSAGE,
-  lastSyncProblem,
-  requestSync,
-  startAutoSync,
-  syncThenSignOut
-} from './autoSync'
+import { SESSION_ENDED_MESSAGE } from './session'
+import { lastSyncProblem, requestSync, startAutoSync, syncThenSignOut } from './autoSync'
 
 const MARIA = { id: 'user-maria', name: 'Maria' }
 

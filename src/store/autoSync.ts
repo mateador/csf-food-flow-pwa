@@ -2,12 +2,16 @@ import { signal } from '@preact/signals'
 import { isUnauthorized, isUnreachable } from '../services/api'
 import { pendingFor, syncOfflineQueue } from './offlineQueue'
 import { route } from 'preact-router'
-import { currentUser, loadSession, sessionEnded, sessionOffline, signOut } from './session'
+import {
+  SESSION_ENDED_MESSAGE,
+  currentUser,
+  loadSession,
+  sessionEnded,
+  sessionOffline,
+  signOut
+} from './session'
 
 const RETRY_INTERVAL_MS = 60_000
-
-export const SESSION_ENDED_MESSAGE =
-  "You've been signed out. Anything you recorded is saved on this device and will upload after you sign in."
 
 /** Why the last automatic attempt didn't upload, for the Sync page. null
  * after a successful upload, or when nothing was waiting. */

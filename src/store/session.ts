@@ -1,7 +1,7 @@
 import { signal } from '@preact/signals'
 import { route } from 'preact-router'
 import type { components } from '../types/api'
-import { getMe, isUnreachable, logout } from '../services/api'
+import { getMe, isUnreachable, logout, setUnauthorizedHandler } from '../services/api'
 import { readJson, removeKey, writeJson } from '../utils/storage'
 import { clearReferenceData, warmReferenceData } from './referenceData'
 
@@ -20,6 +20,9 @@ export const sessionOffline = signal(false)
 
 /** Shown once on the sign-in page after a session ended unexpectedly. */
 export const signInNotice = signal<string | null>(null)
+
+export const SESSION_ENDED_MESSAGE =
+  "You've been signed out. Anything you recorded is saved on this device and will upload after you sign in."
 
 function remember(user: User): void {
   currentUser.value = user
@@ -88,11 +91,21 @@ export function signedIn(user: User): void {
  * deactivated. Anything the caller already queued stays on the device and
  * uploads when that person signs in again.
  */
-export function sessionEnded(message: string): void {
+export function sessionEnded(message: string = SESSION_ENDED_MESSAGE): void {
+  // Several requests can hit the same 401 at once (e.g. a form loading its
+  // three lists); handle it once.
+  if (currentUser.value === null && signInNotice.value === message) return
   forget()
   signInNotice.value = message
   route('/login', true)
 }
+
+// Any request that finds the session gone -- a form loading its lists, the
+// entries page, an upload -- signs out and explains why, rather than
+// leaving a half-empty screen with no reason given.
+setUnauthorizedHandler(() => {
+  if (currentUser.value) sessionEnded()
+})
 
 /**
  * Signs out on this device. The local state is cleared straight away so

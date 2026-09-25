@@ -4,11 +4,11 @@ vi.mock('./api', async () => {
   const actual = await vi.importActual<typeof import('./api')>('./api')
   return { ...actual, createEntry: vi.fn(), bulkSyncEntries: vi.fn() }
 })
-vi.mock('../store/autoSync', () => ({
-  requestSync: vi.fn(),
+vi.mock('../store/autoSync', () => ({ requestSync: vi.fn() }))
+vi.mock('../store/session', () => ({
+  sessionEnded: vi.fn(),
   SESSION_ENDED_MESSAGE: 'signed out message'
 }))
-vi.mock('../store/session', () => ({ sessionEnded: vi.fn() }))
 
 import { ApiError, NetworkError, createEntry } from './api'
 import { requestSync } from '../store/autoSync'

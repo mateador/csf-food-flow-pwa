@@ -1,5 +1,15 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { ApiError, NetworkError, getMe, isUnauthorized, isUnreachable, logout } from './api'
+import {
+  ApiError,
+  NetworkError,
+  getMe,
+  isUnauthorized,
+  isUnreachable,
+  listLocations,
+  logout,
+  setUnauthorizedHandler,
+  verifyLoginCode
+} from './api'
 
 function reply(status: number, body: unknown) {
   return Promise.resolve(
@@ -55,13 +65,11 @@ describe('api client error classification', () => {
   it('treats a 422 as a refusal, keeping the server message', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockImplementation(() =>
-          reply(422, {
-            error: { code: 'VALIDATION_ERROR', message: 'Missing required field(s): name' }
-          })
-        )
+      vi.fn().mockImplementation(() =>
+        reply(422, {
+          error: { code: 'VALIDATION_ERROR', message: 'Missing required field(s): name' }
+        })
+      )
     )
 
     const err = await getMe().catch((e) => e)
@@ -96,5 +104,57 @@ describe('api client error classification', () => {
     expect(url).toMatch(/^(https?:\/\/[^/]+)?\/api\/v1\/auth\/logout$/)
     expect(init.method).toBe('POST')
     expect(init.credentials).toBe('include')
+  })
+})
+
+describe('session-ended handler', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    setUnauthorizedHandler(() => {})
+  })
+
+  function stub401() {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockImplementation(() =>
+          reply(401, { error: { code: 'UNAUTHORIZED', message: 'Sign-in required' } })
+        )
+    )
+  }
+
+  it('is called when any authenticated request gets a 401', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    stub401()
+
+    await listLocations().catch(() => {})
+
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('is not called for a wrong sign-in code or for the session check itself', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    stub401()
+
+    await verifyLoginCode('a@example.org', '0000').catch(() => {})
+    await getMe().catch(() => {})
+
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('is not called for other refusals', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => reply(403, {}))
+    )
+
+    await listLocations().catch(() => {})
+
+    expect(handler).not.toHaveBeenCalled()
   })
 })

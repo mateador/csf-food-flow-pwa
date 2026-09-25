@@ -105,7 +105,7 @@ npm run dev -- --host    # also reachable from your phone on the same wifi
 
 npm run typecheck        # tsc --noEmit, strict mode
 npm run lint              # ESLint
-npm run test              # Vitest (offline, sync and session logic, currently 55 tests)
+npm run test              # Vitest (offline, sync and session logic, currently 63 tests)
 npm run test:e2e           # Playwright (not yet populated with flows)
 npm run format              # Prettier
 

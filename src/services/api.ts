@@ -38,6 +38,24 @@ export function isUnauthorized(err: unknown): boolean {
   return err instanceof ApiError && err.status === 401
 }
 
+/**
+ * Called whenever an authenticated request gets a 401 -- the session
+ * expired or the account was deactivated while the app was open. Set once
+ * by the session store (it can't be imported here without a cycle).
+ *
+ * Not called for sign-in requests (a 401 there means a wrong code) or for
+ * /me (the session store is asking that question itself).
+ */
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: () => void): void {
+  onUnauthorized = handler
+}
+
+function isSessionCheck(path: string): boolean {
+  return path.startsWith('/auth/') || path === '/me'
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let res: Response
   try {
@@ -54,6 +72,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const body = await res.json().catch(() => null)
     const code = body?.error?.code ?? 'UNKNOWN_ERROR'
     const message = body?.error?.message ?? `Request failed: ${res.status}`
+    if (res.status === 401 && !isSessionCheck(path)) onUnauthorized?.()
     throw new ApiError(code, message, res.status)
   }
 

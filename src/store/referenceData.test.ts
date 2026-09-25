@@ -12,7 +12,12 @@ import {
   listLocations,
   listTrayTypes
 } from '../services/api'
-import { clearReferenceData, getCategories, warmReferenceData } from './referenceData'
+import {
+  clearReferenceData,
+  getCategories,
+  loadFormLists,
+  warmReferenceData
+} from './referenceData'
 
 const CATEGORIES = [{ code: 'FRESH', name: 'Fresh', active: true }]
 
@@ -74,5 +79,27 @@ describe('referenceData', () => {
     clearReferenceData()
 
     expect(Object.keys(localStorage).filter((k) => k.startsWith('csf:cache:'))).toEqual([])
+  })
+
+  it('loadFormLists returns every list, and flags when one is missing', async () => {
+    vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
+    vi.mocked(listLocations).mockRejectedValue(
+      new ApiError('UNAUTHORIZED', 'Sign-in required', 401)
+    )
+    vi.mocked(listTrayTypes).mockResolvedValue([] as never)
+
+    const lists = await loadFormLists()
+
+    expect(lists.categories).toEqual(CATEGORIES)
+    expect(lists.locations).toEqual([])
+    expect(lists.incomplete).toBe(true)
+  })
+
+  it('loadFormLists is complete when everything loads', async () => {
+    vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
+    vi.mocked(listLocations).mockResolvedValue([] as never)
+    vi.mocked(listTrayTypes).mockResolvedValue([] as never)
+
+    expect((await loadFormLists()).incomplete).toBe(false)
   })
 })

@@ -56,6 +56,34 @@ export async function warmReferenceData(): Promise<void> {
   await Promise.allSettled([getLocations(), getCategories(), getTrayTypes()])
 }
 
+export type FormLists = {
+  locations: Location[]
+  categories: FoodCategory[]
+  trayTypes: TrayType[]
+  /** True if any list couldn't be loaded from the server or the device. */
+  incomplete: boolean
+}
+
+/**
+ * Everything a weigh form needs, in one call. A list that can't be loaded
+ * comes back empty with `incomplete` set, so the form can say why instead
+ * of showing an empty dropdown. (A 401 also signs the person out -- see
+ * setUnauthorizedHandler in session.ts.)
+ */
+export async function loadFormLists(): Promise<FormLists> {
+  const [locations, categories, trayTypes] = await Promise.allSettled([
+    getLocations(),
+    getCategories(),
+    getTrayTypes()
+  ])
+  return {
+    locations: locations.status === 'fulfilled' ? locations.value : [],
+    categories: categories.status === 'fulfilled' ? categories.value : [],
+    trayTypes: trayTypes.status === 'fulfilled' ? trayTypes.value : [],
+    incomplete: [locations, categories, trayTypes].some((r) => r.status === 'rejected')
+  }
+}
+
 export function clearReferenceData(): void {
   Object.values(KEYS).forEach(removeKey)
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { createEntrySchema } from '../types/entry-form-schema'
 import { submitEntry } from '../services/submitEntry'
-import { getCategories, getLocations, getTrayTypes } from '../store/referenceData'
+import { loadFormLists } from '../store/referenceData'
 import { RecordingAs } from '../components/RecordingAs'
 import { currentUser } from '../store/session'
 import { TraySelector } from '../components/TraySelector'
@@ -37,11 +37,16 @@ export function WeighIn() {
 
   const isHub = currentUser.value?.role === 'HUB'
 
+  const [listsIncomplete, setListsIncomplete] = useState(false)
+
   useEffect(() => {
     // Device copies are used when there's no connection -- see referenceData.ts
-    getLocations().then(setLocations).catch(() => {})
-    getCategories().then(setCategories).catch(() => {})
-    getTrayTypes().then(setTrayTypes).catch(() => {})
+    loadFormLists().then((lists) => {
+      setLocations(lists.locations)
+      setCategories(lists.categories)
+      setTrayTypes(lists.trayTypes)
+      setListsIncomplete(lists.incomplete)
+    })
   }, [])
 
   // HUB users can only ever weigh in at their own location -- lock it in
@@ -143,6 +148,13 @@ export function WeighIn() {
       <p class="mb-6 text-sm text-neutral-500">Record surplus food arriving at a location.</p>
 
       <RecordingAs />
+
+      {listsIncomplete && (
+        <div class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          Some of this form's lists couldn't be loaded. Open the app once with a connection so
+          they're saved on this device, then come back to this page.
+        </div>
+      )}
 
       {saved && (
         <div class="mb-4 flex items-center gap-3 rounded-xl bg-green-50 p-4 text-green-800">

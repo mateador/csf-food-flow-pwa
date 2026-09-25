@@ -1,7 +1,7 @@
 import { ApiError, createEntry, isUnauthorized, isUnreachable } from './api'
 import { enqueueEntry, type EntryOwner, type QueuedEntry } from '../store/offlineQueue'
-import { SESSION_ENDED_MESSAGE, requestSync } from '../store/autoSync'
-import { sessionEnded } from '../store/session'
+import { requestSync } from '../store/autoSync'
+import { SESSION_ENDED_MESSAGE, sessionEnded } from '../store/session'
 
 type NewEntry = Omit<QueuedEntry, 'queued_at' | 'queued_by' | 'queued_by_name' | 'sync_error'>
 

@@ -2,17 +2,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('../services/api', async () => {
   const actual = await vi.importActual<typeof import('../services/api')>('../services/api')
-  return { ...actual, getMe: vi.fn(), logout: vi.fn() }
+  return { ...actual, getMe: vi.fn(), logout: vi.fn(), setUnauthorizedHandler: vi.fn() }
 })
 vi.mock('./referenceData', () => ({ warmReferenceData: vi.fn(), clearReferenceData: vi.fn() }))
 vi.mock('preact-router', () => ({ route: vi.fn() }))
 
 import { route } from 'preact-router'
-import { ApiError, NetworkError, getMe, logout } from '../services/api'
+import { ApiError, NetworkError, getMe, logout, setUnauthorizedHandler } from '../services/api'
 import { clearReferenceData, warmReferenceData } from './referenceData'
 import {
   currentUser,
   loadSession,
+  SESSION_ENDED_MESSAGE,
   sessionEnded,
   sessionOffline,
   signInNotice,
@@ -158,5 +159,34 @@ describe('session', () => {
     expect(currentUser.value).toBeNull()
     expect(signInNotice.value).toBe("You've been signed out.")
     expect(route).toHaveBeenCalledWith('/login', true)
+  })
+
+  it('ending the session twice at once only signs out and redirects once', () => {
+    currentUser.value = MARIA
+
+    sessionEnded()
+    sessionEnded()
+
+    expect(route).toHaveBeenCalledTimes(1)
+    expect(signInNotice.value).toBe(SESSION_ENDED_MESSAGE)
+  })
+
+  it('a 401 from any request, while signed in, ends the session', () => {
+    const handler = vi.mocked(setUnauthorizedHandler).mock.calls[0][0]
+    currentUser.value = MARIA
+
+    handler()
+
+    expect(currentUser.value).toBeNull()
+    expect(signInNotice.value).toBe(SESSION_ENDED_MESSAGE)
+    expect(route).toHaveBeenCalledWith('/login', true)
+  })
+
+  it('a 401 while already signed out does nothing', () => {
+    const handler = vi.mocked(setUnauthorizedHandler).mock.calls[0][0]
+
+    handler()
+
+    expect(route).not.toHaveBeenCalled()
   })
 })
