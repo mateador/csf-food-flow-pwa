@@ -142,6 +142,18 @@ automatically.
 **Database → Neon**: no PWA-side deployment step; the PWA only talks to
 the API, never directly to the database.
 
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on every push and pull request. It checks
+that `src/types/api.ts` matches `docs/openapi.yaml`, then runs typecheck,
+lint, the tests and a build.
+
+Netlify deploys `main` on its own, independently of this workflow, so a
+failing check doesn't stop a deploy by itself. To make the checks a gate,
+work through pull requests, and in GitHub (Settings → Branches) protect
+`main` so the "Typecheck, lint, test, build" check must pass before
+merging.
+
 ## Contract Sync
 
 `docs/openapi.yaml` here is a **copy** of the canonical file in the API

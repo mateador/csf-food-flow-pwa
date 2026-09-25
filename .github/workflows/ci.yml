@@ -1,0 +1,53 @@
+# Checks every push and pull request: types, lint, tests, build.
+#
+# Netlify builds and deploys main on its own, independently of this
+# workflow, so this does not stop a failing commit reaching production by
+# itself. To make it a gate, work through pull requests and require this
+# check before merging (Settings -> Branches -> branch protection for main).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Contract types are up to date
+        # src/types/api.ts is generated from docs/openapi.yaml. If someone
+        # edits the contract without regenerating, this fails.
+        run: |
+          npm run generate:types
+          git diff --exit-code -- src/types/api.ts
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
