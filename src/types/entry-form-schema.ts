@@ -48,6 +48,7 @@ export const createEntrySchema = z
     entry_type: entryTypeSchema,
     location_id: z.string().uuid(),
     destination_location_id: z.string().uuid().nullable(),
+    source_location_id: z.string().uuid('From is required'),
     name: z.string().trim().min(1, 'Name is required'),
     food_category_code: foodCategoryCodeSchema,
     gross_weight_kg: z

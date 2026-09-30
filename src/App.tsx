@@ -14,6 +14,7 @@ import { ReportsWeekly } from './pages/ReportsWeekly'
 import { Sync } from './pages/Sync'
 import { Settings } from './pages/Settings'
 import { AdminLocations } from './pages/AdminLocations'
+import { AdminSourceLocations } from './pages/AdminSourceLocations'
 import { AdminUsers } from './pages/AdminUsers'
 import { NavBar } from './components/NavBar'
 
@@ -128,6 +129,16 @@ export function App() {
             <Protected>
               <AdminOnly>
                 <AdminLocations />
+              </AdminOnly>
+            </Protected>
+          )}
+        />
+        <Route
+          path="/admin/source-locations"
+          component={() => (
+            <Protected>
+              <AdminOnly>
+                <AdminSourceLocations />
               </AdminOnly>
             </Protected>
           )}

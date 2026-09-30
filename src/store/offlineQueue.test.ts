@@ -24,6 +24,7 @@ function sampleEntry(client_uuid: string) {
     entry_type: 'IN' as const,
     location_id: 'loc-1',
     destination_location_id: null,
+    source_location_id: 'source-1',
     name: 'Tinned tomatoes',
     food_category_code: 'FRESH',
     gross_weight_kg: 5,

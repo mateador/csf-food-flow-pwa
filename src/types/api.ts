@@ -184,6 +184,44 @@ export interface paths {
         patch: operations["updateLocation"];
         trace?: never;
     };
+    "/source-locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List source locations ("From") for form dropdowns
+         * @description Unlike /locations, not restricted by role -- every authenticated user sees the full list. ADMIN may include inactive rows via `active=false`.
+         */
+        get: operations["listSourceLocations"];
+        put?: never;
+        /** Add a new source location */
+        post: operations["createSourceLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/source-locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a source location's name or active status */
+        patch: operations["updateSourceLocation"];
+        trace?: never;
+    };
     "/entries": {
         parameters: {
             query?: never;
@@ -387,6 +425,13 @@ export interface components {
             type: components["schemas"]["LocationType"];
             active: boolean;
         };
+        /** @description Where food came from before being delivered to a hub or food centre (a shop, donor, or "From" on Food In / Food Out) -- distinct from Location, which is the hub/food-centre the entry is recorded at. */
+        SourceLocation: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            active: boolean;
+        };
         FoodCategory: {
             code: components["schemas"]["FoodCategoryCode"];
             name: string;
@@ -402,6 +447,11 @@ export interface components {
             location_id: string;
             /** Format: uuid */
             destination_location_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Where the food came from ("From"). Required on every entry created going forward; null only on entries recorded before this field existed.
+             */
+            source_location_id: string | null;
             /** @description Name/description of the item being weighed */
             name: string;
             food_category_code: components["schemas"]["FoodCategoryCode"];
@@ -462,6 +512,14 @@ export interface components {
                 /** Format: uuid */
                 location_id: string;
                 location_name: string;
+                in_by_category: components["schemas"]["CategoryTotals"];
+                out_by_category: components["schemas"]["CategoryTotals"];
+            }[];
+            /** @description Same shape as by_location, grouped by "From" instead. Entries recorded before source_location_id existed group under one entry with source_location_id null and source_location_name "Unassigned". */
+            by_source_location: {
+                /** Format: uuid */
+                source_location_id: string | null;
+                source_location_name: string;
                 in_by_category: components["schemas"]["CategoryTotals"];
                 out_by_category: components["schemas"]["CategoryTotals"];
             }[];
@@ -815,6 +873,96 @@ export interface operations {
             };
         };
     };
+    listSourceLocations: {
+        parameters: {
+            query?: {
+                active?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceLocation"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createSourceLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceLocation"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    updateSourceLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    active?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceLocation"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listEntries: {
         parameters: {
             query?: {
@@ -823,6 +971,7 @@ export interface operations {
                 to?: string;
                 location_id?: string;
                 destination_location_id?: string;
+                source_location_id?: string;
                 entry_type?: components["schemas"]["EntryType"];
                 food_category_code?: components["schemas"]["FoodCategoryCode"];
                 status?: components["schemas"]["EntryStatus"];
@@ -867,6 +1016,11 @@ export interface operations {
                     location_id: string;
                     /** Format: uuid */
                     destination_location_id?: string | null;
+                    /**
+                     * Format: uuid
+                     * @description Where the food came from ("From"). Required on every new entry.
+                     */
+                    source_location_id: string;
                     /** @description Name/description of the item being weighed */
                     name: string;
                     food_category_code: components["schemas"]["FoodCategoryCode"];
@@ -918,6 +1072,8 @@ export interface operations {
                         location_id: string;
                         /** Format: uuid */
                         destination_location_id?: string | null;
+                        /** Format: uuid */
+                        source_location_id: string;
                         /** @description Name/description of the item being weighed */
                         name: string;
                         food_category_code: components["schemas"]["FoodCategoryCode"];

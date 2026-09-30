@@ -7,6 +7,7 @@ import type { components } from './api'
 
 export type Entry = components['schemas']['Entry']
 export type Location = components['schemas']['Location']
+export type SourceLocation = components['schemas']['SourceLocation']
 export type FoodCategory = components['schemas']['FoodCategory']
 export type User = components['schemas']['User']
 export type WeeklyReport = components['schemas']['WeeklyReport']

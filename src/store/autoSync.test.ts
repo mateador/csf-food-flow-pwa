@@ -38,6 +38,7 @@ function queueOne(uuid = 'c-1', owner = MARIA) {
       entry_type: 'IN',
       location_id: 'hub-1',
       destination_location_id: null,
+      source_location_id: 'source-1',
       name: 'Tesco',
       food_category_code: 'FRESH',
       gross_weight_kg: 10,

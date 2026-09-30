@@ -10,10 +10,12 @@ import { getLastLocation, setLastLocation } from '../utils/lastLocation'
 import type { components } from '../types/api'
 
 type Location = components['schemas']['Location']
+type SourceLocation = components['schemas']['SourceLocation']
 type FoodCategory = components['schemas']['FoodCategory']
 type TrayType = components['schemas']['TrayType']
 
 const LAST_LOCATION_KEY = 'weigh-in'
+const LAST_FROM_LOCATION_KEY = 'weigh-in-source'
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
@@ -21,9 +23,11 @@ function todayIso(): string {
 
 export function WeighIn() {
   const [locations, setLocations] = useState<Location[]>([])
+  const [sourceLocations, setSourceLocations] = useState<SourceLocation[]>([])
   const [categories, setCategories] = useState<FoodCategory[]>([])
   const [trayTypes, setTrayTypes] = useState<TrayType[]>([])
   const [locationId, setLocationId] = useState('')
+  const [fromLocationId, setFromLocationId] = useState('')
   const [name, setName] = useState('')
   const [categoryCode, setCategoryCode] = useState('')
   const [grossWeightKg, setGrossWeightKg] = useState('')
@@ -43,6 +47,7 @@ export function WeighIn() {
     // Device copies are used when there's no connection -- see referenceData.ts
     loadFormLists().then((lists) => {
       setLocations(lists.locations)
+      setSourceLocations(lists.sourceLocations)
       setCategories(lists.categories)
       setTrayTypes(lists.trayTypes)
       setListsIncomplete(lists.incomplete)
@@ -70,6 +75,17 @@ export function WeighIn() {
       }
     }
   }, [isHub, locations])
+
+  // "From" isn't tied to role the way Location is -- everyone defaults to
+  // whatever they picked last time on this device, still fully overridable.
+  useEffect(() => {
+    if (!fromLocationId && sourceLocations.length > 0) {
+      const remembered = getLastLocation(LAST_FROM_LOCATION_KEY)
+      if (remembered && sourceLocations.some((l) => l.id === remembered)) {
+        setFromLocationId(remembered)
+      }
+    }
+  }, [sourceLocations])
 
   const trays = useMemo(
     () =>
@@ -101,6 +117,7 @@ export function WeighIn() {
       entry_type: 'IN' as const,
       location_id: locationId,
       destination_location_id: null,
+      source_location_id: fromLocationId,
       name: name.trim(),
       food_category_code: categoryCode,
       gross_weight_kg: Number(grossWeightKg),
@@ -131,6 +148,7 @@ export function WeighIn() {
       }
       if (outcome.kind === 'signed_out') return // sessionEnded() has moved to sign-in
       if (!isHub) setLastLocation(LAST_LOCATION_KEY, locationId)
+      setLastLocation(LAST_FROM_LOCATION_KEY, fromLocationId)
       if (outcome.kind === 'saved') setSaved(true)
       else setSavedOffline(true)
       setName('')
@@ -213,6 +231,23 @@ export function WeighIn() {
               ))}
             </select>
           )}
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium text-neutral-700">From</label>
+          <select
+            required
+            value={fromLocationId}
+            onInput={(e) => setFromLocationId((e.target as HTMLSelectElement).value)}
+            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+          >
+            <option value="">Select where this came from</option>
+            {sourceLocations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

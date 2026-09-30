@@ -1,14 +1,22 @@
 import type { components } from '../types/api'
-import { isUnreachable, listCategories, listLocations, listTrayTypes } from '../services/api'
+import {
+  isUnreachable,
+  listCategories,
+  listLocations,
+  listSourceLocations,
+  listTrayTypes
+} from '../services/api'
 import { readJson, removeKey, writeJson } from '../utils/storage'
 
 type Location = components['schemas']['Location']
+type SourceLocation = components['schemas']['SourceLocation']
 type FoodCategory = components['schemas']['FoodCategory']
 type TrayType = components['schemas']['TrayType']
 
 /**
- * The lists every weigh form needs -- locations, food categories, tray
- * types -- kept on the device so the forms still work with no connection.
+ * The lists every weigh form needs -- locations, source locations, food
+ * categories, tray types -- kept on the device so the forms still work
+ * with no connection.
  *
  * Each fetch goes to the network first. A successful reply refreshes the
  * device copy; if the server can't be reached, the last copy is used
@@ -19,6 +27,7 @@ type TrayType = components['schemas']['TrayType']
  */
 const KEYS = {
   locations: 'csf:cache:locations',
+  sourceLocations: 'csf:cache:source-locations',
   categories: 'csf:cache:categories',
   trayTypes: 'csf:cache:tray-types'
 } as const
@@ -41,6 +50,10 @@ export function getLocations(): Promise<Location[]> {
   return networkFirst(KEYS.locations, listLocations)
 }
 
+export function getSourceLocations(): Promise<SourceLocation[]> {
+  return networkFirst(KEYS.sourceLocations, listSourceLocations)
+}
+
 export function getCategories(): Promise<FoodCategory[]> {
   return networkFirst(KEYS.categories, listCategories)
 }
@@ -53,11 +66,12 @@ export function getTrayTypes(): Promise<TrayType[]> {
  * goes -- called right after sign-in and whenever the session is confirmed
  * online. Failures are ignored; the forms retry when they open. */
 export async function warmReferenceData(): Promise<void> {
-  await Promise.allSettled([getLocations(), getCategories(), getTrayTypes()])
+  await Promise.allSettled([getLocations(), getSourceLocations(), getCategories(), getTrayTypes()])
 }
 
 export type FormLists = {
   locations: Location[]
+  sourceLocations: SourceLocation[]
   categories: FoodCategory[]
   trayTypes: TrayType[]
   /** True if any list couldn't be loaded from the server or the device. */
@@ -71,16 +85,20 @@ export type FormLists = {
  * setUnauthorizedHandler in session.ts.)
  */
 export async function loadFormLists(): Promise<FormLists> {
-  const [locations, categories, trayTypes] = await Promise.allSettled([
+  const [locations, sourceLocations, categories, trayTypes] = await Promise.allSettled([
     getLocations(),
+    getSourceLocations(),
     getCategories(),
     getTrayTypes()
   ])
   return {
     locations: locations.status === 'fulfilled' ? locations.value : [],
+    sourceLocations: sourceLocations.status === 'fulfilled' ? sourceLocations.value : [],
     categories: categories.status === 'fulfilled' ? categories.value : [],
     trayTypes: trayTypes.status === 'fulfilled' ? trayTypes.value : [],
-    incomplete: [locations, categories, trayTypes].some((r) => r.status === 'rejected')
+    incomplete: [locations, sourceLocations, categories, trayTypes].some(
+      (r) => r.status === 'rejected'
+    )
   }
 }
 

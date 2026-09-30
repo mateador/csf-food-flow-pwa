@@ -117,6 +117,32 @@ export function ReportsWeekly() {
               ))}
             </div>
           </div>
+
+          <div>
+            <h2 class="mb-2 font-medium text-neutral-900">By Source (From)</h2>
+            <div class="space-y-2">
+              {report.by_source_location.map((loc) => (
+                <div
+                  key={loc.source_location_id ?? 'unassigned'}
+                  class="rounded-lg border border-neutral-200 p-3 text-sm"
+                >
+                  <div class="mb-1 font-medium text-neutral-900">{loc.source_location_name}</div>
+                  <div class="text-neutral-500">
+                    In:{' '}
+                    {Object.entries(loc.in_by_category ?? {})
+                      .map(([c, kg]) => `${c} ${kg}kg`)
+                      .join(', ')}
+                  </div>
+                  <div class="text-neutral-500">
+                    Out:{' '}
+                    {Object.entries(loc.out_by_category ?? {})
+                      .map(([c, kg]) => `${c} ${kg}kg`)
+                      .join(', ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

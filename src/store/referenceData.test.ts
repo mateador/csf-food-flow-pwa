@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('../services/api', async () => {
   const actual = await vi.importActual<typeof import('../services/api')>('../services/api')
-  return { ...actual, listCategories: vi.fn(), listLocations: vi.fn(), listTrayTypes: vi.fn() }
+  return {
+    ...actual,
+    listCategories: vi.fn(),
+    listLocations: vi.fn(),
+    listSourceLocations: vi.fn(),
+    listTrayTypes: vi.fn()
+  }
 })
 
 import {
@@ -10,6 +16,7 @@ import {
   NetworkError,
   listCategories,
   listLocations,
+  listSourceLocations,
   listTrayTypes
 } from '../services/api'
 import {
@@ -26,6 +33,7 @@ describe('referenceData', () => {
     localStorage.clear()
     vi.mocked(listCategories).mockReset()
     vi.mocked(listLocations).mockReset()
+    vi.mocked(listSourceLocations).mockReset()
     vi.mocked(listTrayTypes).mockReset()
   })
 
@@ -60,9 +68,10 @@ describe('referenceData', () => {
     await expect(getCategories()).rejects.toBeInstanceOf(ApiError)
   })
 
-  it('warm fetches all three lists and ignores failures', async () => {
+  it('warm fetches all four lists and ignores failures', async () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockRejectedValue(new NetworkError())
+    vi.mocked(listSourceLocations).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     await expect(warmReferenceData()).resolves.toBeUndefined()
@@ -73,6 +82,7 @@ describe('referenceData', () => {
   it('clear removes every device copy', async () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockResolvedValue([] as never)
+    vi.mocked(listSourceLocations).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
     await warmReferenceData()
 
@@ -86,6 +96,7 @@ describe('referenceData', () => {
     vi.mocked(listLocations).mockRejectedValue(
       new ApiError('UNAUTHORIZED', 'Sign-in required', 401)
     )
+    vi.mocked(listSourceLocations).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     const lists = await loadFormLists()
@@ -98,6 +109,7 @@ describe('referenceData', () => {
   it('loadFormLists is complete when everything loads', async () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockResolvedValue([] as never)
+    vi.mocked(listSourceLocations).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     expect((await loadFormLists()).incomplete).toBe(false)
