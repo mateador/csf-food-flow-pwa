@@ -7,6 +7,7 @@ import { currentUser } from '../store/session'
 import { TraySelector } from '../components/TraySelector'
 import { CategorySelector } from '../components/CategorySelector'
 import { getLastLocation, setLastLocation } from '../utils/lastLocation'
+import { scrollToTop } from '../utils/scroll'
 import type { components } from '../types/api'
 
 type Location = components['schemas']['Location']
@@ -129,10 +130,12 @@ export function WeighIn() {
     const result = createEntrySchema.safeParse(candidate)
     if (!result.success) {
       setErrors(result.error.issues.map((i) => i.message))
+      scrollToTop()
       return
     }
     if (netIsNegative) {
       setErrors(['Selected trays weigh more than the gross weight entered -- check the weight and tray selection'])
+      scrollToTop()
       return
     }
 
@@ -144,6 +147,7 @@ export function WeighIn() {
         // The server looked at it and said no. Keep the form filled in so
         // it can be corrected -- nothing was saved anywhere.
         setErrors([outcome.message])
+        scrollToTop()
         return
       }
       if (outcome.kind === 'signed_out') return // sessionEnded() has moved to sign-in
@@ -151,6 +155,7 @@ export function WeighIn() {
       setLastLocation(LAST_FROM_LOCATION_KEY, fromLocationId)
       if (outcome.kind === 'saved') setSaved(true)
       else setSavedOffline(true)
+      scrollToTop()
       setName('')
       setGrossWeightKg('')
       setTrayQuantities({})
