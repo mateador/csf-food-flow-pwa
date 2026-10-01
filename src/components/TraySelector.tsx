@@ -21,26 +21,26 @@ export function TraySelector({ trayTypes, quantities, onChange }: TraySelectorPr
       {trayTypes.map((tray) => {
         const qty = quantities[tray.code] ?? 0
         return (
-          <div key={tray.code} class="flex items-center justify-between px-3 py-2">
+          <div key={tray.code} class="flex items-center justify-between px-4 py-3">
             <div>
-              <div class="text-sm text-neutral-900">{tray.name}</div>
-              <div class="text-xs text-neutral-500">{tray.weight_kg} kg each</div>
+              <div class="text-base text-neutral-900">{tray.name}</div>
+              <div class="text-sm text-neutral-500">{tray.weight_kg} kg each</div>
             </div>
             <div class="flex items-center gap-3">
               <button
                 type="button"
                 disabled={qty === 0}
                 onClick={() => onChange(tray.code, Math.max(0, qty - 1))}
-                class="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 text-neutral-600 disabled:opacity-30"
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 text-xl text-neutral-600 disabled:opacity-30 active:scale-[0.95]"
                 aria-label={`Remove one ${tray.name}`}
               >
                 −
               </button>
-              <span class="w-4 text-center text-sm text-neutral-900">{qty}</span>
+              <span class="w-5 text-center text-base text-neutral-900">{qty}</span>
               <button
                 type="button"
                 onClick={() => onChange(tray.code, qty + 1)}
-                class="flex h-7 w-7 items-center justify-center rounded-full border border-csf-purple text-csf-purple"
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-csf-purple text-xl text-csf-purple active:scale-[0.95]"
                 aria-label={`Add one ${tray.name}`}
               >
                 +

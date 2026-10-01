@@ -227,7 +227,7 @@ export function WeighOut() {
             required
             value={destinationId}
             onInput={(e) => setDestinationId((e.target as HTMLSelectElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           >
             <option value="">Select a hub</option>
             {hubs.map((hub) => (
@@ -244,7 +244,7 @@ export function WeighOut() {
             required
             value={fromLocationId}
             onInput={(e) => setFromLocationId((e.target as HTMLSelectElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           >
             <option value="">Select where this came from</option>
             {sourceLocations.map((loc) => (
@@ -263,7 +263,7 @@ export function WeighOut() {
             max={todayIso()}
             value={collectionDate}
             onInput={(e) => setCollectionDate((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
         </div>
 
@@ -275,7 +275,7 @@ export function WeighOut() {
             autoFocus
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
         </div>
 
@@ -295,7 +295,7 @@ export function WeighOut() {
             required
             value={grossWeightKg}
             onInput={(e) => setGrossWeightKg((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
           <p class="mt-1 text-xs text-neutral-400">What the scale reads -- food and trays together.</p>
         </div>
@@ -320,7 +320,7 @@ export function WeighOut() {
           <textarea
             value={notes}
             onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
             rows={2}
           />
         </div>
@@ -328,7 +328,7 @@ export function WeighOut() {
         <button
           type="submit"
           disabled={submitting}
-          class="w-full rounded-lg bg-csf-purple px-4 py-2 font-medium text-white disabled:opacity-50"
+          class="w-full rounded-lg bg-csf-purple px-5 py-3 text-lg font-medium text-white disabled:opacity-50"
         >
           {submitting ? 'Saving…' : 'Save weigh-out'}
         </button>

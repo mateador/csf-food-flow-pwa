@@ -11,7 +11,7 @@ export function RecordingAs() {
   if (!user) return null
 
   return (
-    <div class="mb-4 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700">
+    <div class="mb-4 rounded-lg border border-neutral-200 px-4 py-3 text-sm text-neutral-700">
       <div class="flex items-center justify-between gap-3">
         <span>
           Recording as <span class="font-medium text-neutral-900">{user.name}</span>

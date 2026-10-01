@@ -218,7 +218,7 @@ export function WeighIn() {
         <div>
           <label class="mb-1 block text-sm font-medium text-neutral-700">Location</label>
           {isHub ? (
-            <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-neutral-700">
+            <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-700">
               {locations.find((l) => l.id === locationId)?.name ?? 'Your hub'}
             </div>
           ) : (
@@ -226,7 +226,7 @@ export function WeighIn() {
               required
               value={locationId}
               onInput={(e) => setLocationId((e.target as HTMLSelectElement).value)}
-              class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+              class="w-full rounded-lg border border-neutral-300 px-4 py-3"
             >
               <option value="">Select a location</option>
               {locations.map((loc) => (
@@ -244,7 +244,7 @@ export function WeighIn() {
             required
             value={fromLocationId}
             onInput={(e) => setFromLocationId((e.target as HTMLSelectElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           >
             <option value="">Select where this came from</option>
             {sourceLocations.map((loc) => (
@@ -263,7 +263,7 @@ export function WeighIn() {
             max={todayIso()}
             value={collectionDate}
             onInput={(e) => setCollectionDate((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
         </div>
 
@@ -275,7 +275,7 @@ export function WeighIn() {
             autoFocus
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
         </div>
 
@@ -295,7 +295,7 @@ export function WeighIn() {
             required
             value={grossWeightKg}
             onInput={(e) => setGrossWeightKg((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
           <p class="mt-1 text-xs text-neutral-400">What the scale reads -- food and trays together.</p>
         </div>
@@ -320,7 +320,7 @@ export function WeighIn() {
           <textarea
             value={notes}
             onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-3 py-2"
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
             rows={2}
           />
         </div>
@@ -328,7 +328,7 @@ export function WeighIn() {
         <button
           type="submit"
           disabled={submitting}
-          class="w-full rounded-lg bg-csf-purple px-4 py-2 font-medium text-white disabled:opacity-50"
+          class="w-full rounded-lg bg-csf-purple px-5 py-3 text-lg font-medium text-white disabled:opacity-50"
         >
           {submitting ? 'Saving…' : 'Save weigh-in'}
         </button>

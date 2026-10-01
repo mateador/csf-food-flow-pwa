@@ -50,3 +50,15 @@ body {
 [data-contrast='high'] .bg-neutral-50 {
   background-color: #ffffff !important;
 }
+
+/*
+ * Large text mode -- a per-device preference (see store/theme.ts) aimed at
+ * the hub tablet, where text-sm/text-xs read too small from counter
+ * distance. Since every Tailwind font-size utility in this app is rem-based,
+ * scaling the root font-size scales all of them (and the rem-based spacing
+ * scale, giving bigger tap targets as a side effect) without touching
+ * component markup -- same reasoning as the contrast override above.
+ */
+[data-text-size='large'] {
+  font-size: 120%;
+}

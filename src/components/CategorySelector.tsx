@@ -28,8 +28,8 @@ export function CategorySelector({ categories, value, onChange }: CategorySelect
             onClick={() => onChange(cat.code)}
             class={
               isSelected
-                ? 'rounded-lg border-2 border-csf-purple bg-csf-purple px-3 py-2.5 text-left text-sm font-medium text-white'
-                : 'rounded-lg border-2 border-neutral-200 bg-white px-3 py-2.5 text-left text-sm text-neutral-700'
+                ? 'rounded-lg border-2 border-csf-purple bg-csf-purple px-4 py-3 text-left text-base font-medium text-white active:scale-[0.98]'
+                : 'rounded-lg border-2 border-neutral-200 bg-white px-4 py-3 text-left text-base text-neutral-700 active:scale-[0.98]'
             }
           >
             {cat.name}
