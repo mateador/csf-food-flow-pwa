@@ -37,8 +37,10 @@ src/
     offlineQueue.ts  -- entries waiting to upload, each tagged with who recorded it
     autoSync.ts      -- uploads waiting entries automatically
     referenceData.ts -- device copies of locations, categories, tray types
+    theme.ts         -- high contrast / large text / dark mode, see "Display preferences"
   utils/
     storage.ts       -- localStorage helpers that never throw
+    scroll.ts        -- scrollToTop(), called after every save so the result banner is seen
   types/
     api.ts            -- GENERATED from docs/openapi.yaml, do not hand-edit
     entry-form-schema.ts -- Zod validation for the weigh-in/out form
@@ -83,6 +85,44 @@ can't reach the server, the device stays signed out until it can.
 service worker: a cached `/me` would bring the previous volunteer back
 after sign-out. The app manages its own device copies and clears them on
 sign-out.
+
+## Display preferences
+
+Three independent toggles in Settings (`src/store/theme.ts`), each a
+per-device `localStorage` preference rather than a user account setting
+-- a tablet mounted at a hub counter can have one turned on once and it
+stays on for that device only, without affecting anyone's own phone:
+
+- **High contrast** -- darker text/borders on the normal bright
+  background, for reading in direct sunlight/glare.
+- **Large text** -- scales the whole UI's root font size up, for a
+  tablet viewed from counter distance.
+- **Dark mode** -- a genuine dark theme (not the same thing as High
+  Contrast -- that one assumes a bright page), for low light.
+
+All three use the same mechanism: a `data-*` attribute set on `<html>`
+before first paint (see the inline script in `index.html`, which avoids a
+flash of the default theme), with the actual styling done in
+`src/index.css` as attribute-selector overrides of the Tailwind color/size
+variables already used throughout the app, rather than touching component
+markup.
+
+**They are deliberately cross-aware.** High Contrast and Dark Mode can
+both be on at once, and High Contrast's overrides were written to check
+for that (`:not([data-theme='dark'])` vs. `[data-theme='dark']` variants
+of each rule) -- a hardcoded "force this text pure black" only helps on a
+bright background, and does the opposite of "high contrast" on a dark
+one. If you add a fourth display toggle, check how it behaves combined
+with the other three before shipping it, not just on its own.
+
+Also worth knowing: Tailwind v4's default color palette uses `oklch()`
+colors, which older/budget Android browsers (this app's actual hub
+tablet is a several-years-old ASUS ZenPad) don't parse -- an unparseable
+background-color silently falls back to transparent, not to the color
+you'd expect. Every default-palette shade this app actually uses
+(neutral/red/green/amber) is redefined as plain hex in `src/index.css`'s
+`@theme` block for exactly this reason; don't reintroduce a raw Tailwind
+color utility without checking it's covered there.
 
 ## Prerequisites
 
@@ -177,10 +217,10 @@ build history for the reasoning).
   API client, for the same reason as A1 (page-priority ordering meant
   admin pages were built last, after the higher-priority weigh-in/out and
   sync flows).
-- **A3** — Admin pages (`/admin/locations`, `/admin/users`) are read-only
-  in this pass. The API already supports create/update
-  (`POST`/`PATCH` on both resources, ADMIN-only, verified working) — the
-  forms themselves are a follow-up.
+- **A3** — Admin pages (`/admin/locations`, `/admin/users`,
+  `/admin/source-locations`) are read-only in this pass. The API already
+  supports create/update (`POST`/`PATCH` on all three resources,
+  ADMIN-only, verified working) — the forms themselves are a follow-up.
 - **A4** — `npm install` requires TypeScript pinned to `5.9.3` (not the
   newer `6.x` Vite's template defaults to) because `openapi-typescript`
   declares a peer dependency on TS `^5.x`. This is already reflected in
