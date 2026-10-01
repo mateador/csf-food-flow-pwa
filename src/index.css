@@ -72,25 +72,55 @@ body {
  * changes to component markup. It is not a pixel-perfect WCAG-AAA reskin
  * of every color decision in the app -- it targets the handful of
  * choices that matter most (body text contrast, border visibility).
+ *
+ * These rules assume a bright page -- forcing muted text/borders to pure
+ * black only helps if the background is light. The :not([data-theme='dark'])
+ * guard keeps that assumption from applying when Dark Mode is ALSO on,
+ * where it would do the opposite of what "high contrast" promises (pure
+ * black text on a near-black page is harder to read, not easier) -- see
+ * the dark-aware equivalents just below.
  */
-[data-contrast='high'] {
+[data-contrast='high']:not([data-theme='dark']) {
   --color-csf-purple: #5c1f66;
 }
 
-[data-contrast='high'] .text-neutral-400,
-[data-contrast='high'] .text-neutral-500 {
+[data-contrast='high']:not([data-theme='dark']) .text-neutral-400,
+[data-contrast='high']:not([data-theme='dark']) .text-neutral-500 {
   color: #000 !important;
 }
 
-[data-contrast='high'] .border-neutral-100,
-[data-contrast='high'] .border-neutral-200,
-[data-contrast='high'] .border-neutral-300 {
+[data-contrast='high']:not([data-theme='dark']) .border-neutral-100,
+[data-contrast='high']:not([data-theme='dark']) .border-neutral-200,
+[data-contrast='high']:not([data-theme='dark']) .border-neutral-300 {
   border-color: #000 !important;
   border-width: 2px !important;
 }
 
-[data-contrast='high'] .bg-neutral-50 {
+[data-contrast='high']:not([data-theme='dark']) .bg-neutral-50 {
   background-color: #ffffff !important;
+}
+
+/* Same intent (push muted text/borders to the most legible extreme),
+   aimed the opposite direction for a dark page -- white instead of
+   black, black instead of white. */
+[data-contrast='high'][data-theme='dark'] {
+  --color-csf-purple: #e0b3ec;
+}
+
+[data-contrast='high'][data-theme='dark'] .text-neutral-400,
+[data-contrast='high'][data-theme='dark'] .text-neutral-500 {
+  color: #fff !important;
+}
+
+[data-contrast='high'][data-theme='dark'] .border-neutral-100,
+[data-contrast='high'][data-theme='dark'] .border-neutral-200,
+[data-contrast='high'][data-theme='dark'] .border-neutral-300 {
+  border-color: #fff !important;
+  border-width: 2px !important;
+}
+
+[data-contrast='high'][data-theme='dark'] .bg-neutral-50 {
+  background-color: #000000 !important;
 }
 
 /*
@@ -122,8 +152,6 @@ body {
  * bg-white) so they don't fade into the now-dark track behind them.
  */
 [data-theme='dark'] {
-  color-scheme: dark; /* native form controls (date picker, scrollbars) follow suit */
-
   --color-neutral-50: #27272a;
   --color-neutral-100: #3f3f46;
   --color-neutral-200: #3f3f46;
