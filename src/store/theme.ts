@@ -2,6 +2,7 @@ import { signal } from '@preact/signals'
 
 const CONTRAST_KEY = 'csf:contrast'
 const TEXT_SIZE_KEY = 'csf:text-size'
+const DARK_MODE_KEY = 'csf:dark-mode'
 
 function readInitialContrast(): boolean {
   try {
@@ -14,6 +15,14 @@ function readInitialContrast(): boolean {
 function readInitialTextSize(): boolean {
   try {
     return localStorage.getItem(TEXT_SIZE_KEY) === 'large'
+  } catch {
+    return false
+  }
+}
+
+function readInitialDarkMode(): boolean {
+  try {
+    return localStorage.getItem(DARK_MODE_KEY) === 'on'
   } catch {
     return false
   }
@@ -53,6 +62,26 @@ export function setHighTextSize(enabled: boolean): void {
   }
   try {
     localStorage.setItem(TEXT_SIZE_KEY, enabled ? 'large' : 'normal')
+  } catch {
+    // Storage disabled -- the preference just won't survive a reload,
+    // not worth surfacing an error for.
+  }
+}
+
+// Independent of highContrast -- that one keeps the bright background and
+// darkens text/borders for sunlight/glare; this is a genuine dark theme,
+// for low light instead. Same per-device, pre-paint-applied pattern.
+export const darkMode = signal(readInitialDarkMode())
+
+export function setDarkMode(enabled: boolean): void {
+  darkMode.value = enabled
+  if (enabled) {
+    document.documentElement.setAttribute('data-theme', 'dark')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+  }
+  try {
+    localStorage.setItem(DARK_MODE_KEY, enabled ? 'on' : 'off')
   } catch {
     // Storage disabled -- the preference just won't survive a reload,
     // not worth surfacing an error for.

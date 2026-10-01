@@ -104,3 +104,70 @@ body {
 [data-text-size='large'] {
   font-size: 120%;
 }
+
+/*
+ * Dark mode -- independent of high-contrast above (that one keeps a
+ * bright background for sunlight/glare; this is a genuine dark theme for
+ * low light). Same technique as the two overrides above: almost every
+ * color in this app is one of a small, consistently-used set of Tailwind
+ * variables (each neutral/red/green/amber shade means exactly one thing
+ * everywhere it's used -- e.g. neutral-900 is always "primary text",
+ * never anything else), so overriding the variable itself flips every
+ * utility class built from it -- including hover/active/focus variants --
+ * with zero component changes. `white` is the one exception: bg-white
+ * (surfaces) and text-white (button labels on the purple that stays
+ * purple) are both literally "white" but need to go opposite directions,
+ * so that one is overridden as a class selector instead of a variable,
+ * with a specific carve-out for the Settings toggle knobs (also
+ * bg-white) so they don't fade into the now-dark track behind them.
+ */
+[data-theme='dark'] {
+  color-scheme: dark; /* native form controls (date picker, scrollbars) follow suit */
+
+  --color-neutral-50: #27272a;
+  --color-neutral-100: #3f3f46;
+  --color-neutral-200: #3f3f46;
+  --color-neutral-300: #52525b;
+  --color-neutral-400: #71717a;
+  --color-neutral-500: #a1a1aa;
+  --color-neutral-600: #d4d4d8;
+  --color-neutral-700: #e4e4e7;
+  --color-neutral-800: #18181b;
+  --color-neutral-900: #fafafa;
+
+  --color-red-50: #450a0a;
+  --color-red-200: #991b1b;
+  --color-red-600: #f87171;
+  --color-red-700: #f87171;
+  --color-red-800: #fca5a5;
+
+  --color-green-50: #052e16;
+  --color-green-700: #86efac;
+  --color-green-800: #86efac;
+
+  --color-amber-50: #451a03;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fcd34d;
+
+  /* Brand purple: lightened so text/borders stay legible against a near-
+     black page (the opposite adjustment from high-contrast's darkening
+     above), and csf-purple-light flips from "near-white tint" to a dark
+     purple tint since it's used as a subtle/selected background. */
+  --color-csf-purple: #c891d6;
+  --color-csf-purple-light: #3b1f42;
+}
+
+[data-theme='dark'] .bg-white {
+  background-color: #18181b !important;
+}
+
+[data-theme='dark'] button[role='switch'] .bg-white {
+  background-color: #ffffff !important;
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background-color: #18181b;
+  color: #fafafa;
+}

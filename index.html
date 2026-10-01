@@ -18,6 +18,9 @@
         if (localStorage.getItem('csf:text-size') === 'large') {
           document.documentElement.setAttribute('data-text-size', 'large')
         }
+        if (localStorage.getItem('csf:dark-mode') === 'on') {
+          document.documentElement.setAttribute('data-theme', 'dark')
+        }
       } catch {}
     </script>
   </head>

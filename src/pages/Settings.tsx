@@ -2,7 +2,14 @@ import { useState } from 'preact/hooks'
 import { currentUser } from '../store/session'
 import { syncThenSignOut } from '../store/autoSync'
 import { pendingFor } from '../store/offlineQueue'
-import { highContrast, setHighContrast, highTextSize, setHighTextSize } from '../store/theme'
+import {
+  highContrast,
+  setHighContrast,
+  highTextSize,
+  setHighTextSize,
+  darkMode,
+  setDarkMode
+} from '../store/theme'
 
 export function Settings() {
   const user = currentUser.value
@@ -55,6 +62,28 @@ export function Settings() {
           <span
             class={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition-transform ${
               highContrast.value ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
+      <div class="mb-3 flex items-center justify-between rounded-lg border border-neutral-200 p-4">
+        <div>
+          <p class="text-sm font-medium text-neutral-900">Dark mode</p>
+          <p class="text-xs text-neutral-500">A dark theme for low light -- stays on for this device only.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={darkMode.value}
+          onClick={() => setDarkMode(!darkMode.value)}
+          class={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+            darkMode.value ? 'bg-csf-purple' : 'bg-neutral-300'
+          }`}
+        >
+          <span
+            class={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+              darkMode.value ? 'translate-x-5' : 'translate-x-0'
             }`}
           />
         </button>
