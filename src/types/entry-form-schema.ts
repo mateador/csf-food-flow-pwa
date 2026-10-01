@@ -48,7 +48,7 @@ export const createEntrySchema = z
     entry_type: entryTypeSchema,
     location_id: z.string().uuid(),
     destination_location_id: z.string().uuid().nullable(),
-    source_location_id: z.string().uuid('From is required'),
+    source_location_id: z.string().uuid().nullable(),
     name: z.string().trim().min(1, 'Name is required'),
     food_category_code: foodCategoryCodeSchema,
     gross_weight_kg: z
@@ -81,6 +81,14 @@ export const createEntrySchema = z
   .refine(
     (data) => data.destination_location_id !== data.location_id,
     { message: 'Destination cannot be the same as the source location', path: ['destination_location_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'IN' ? data.source_location_id !== null : true),
+    { message: 'From is required', path: ['source_location_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'OUT' ? data.source_location_id === null : true),
+    { message: 'OUT entries must not have a source location', path: ['source_location_id'] }
   )
 
 export type CreateEntryInput = z.infer<typeof createEntrySchema>

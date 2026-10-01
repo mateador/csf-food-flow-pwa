@@ -9,6 +9,48 @@
   --color-csf-purple-light: #F4E9F6;/* derived: subtle backgrounds, selected states */
 
   --font-sans: "Inter", system-ui, sans-serif;
+
+  /*
+   * Tailwind v4's default palette (neutral/red/green/amber, used all over
+   * this app for borders, muted text, and status banners) is defined with
+   * oklch() colors. oklch() support only landed in Chrome ~111 (2023) --
+   * older/budget Android tablets (e.g. the ASUS ZenPad 8.0 this app runs
+   * on at the centre hub) ship a WebView from well before that, which
+   * silently drops any declaration using a color it can't parse. For a
+   * background-color that means it falls back to transparent -- which is
+   * exactly why the Settings toggles were invisible when "off"
+   * (bg-neutral-300) while "on" (the hex-defined csf-purple above) still
+   * rendered fine. Redefining these specific shades as plain hex here
+   * makes every existing bg-neutral-300/text-red-800/etc. utility class
+   * resolve to a value every browser can parse, with no component changes
+   * needed -- these are the standard Tailwind v3 hex values for the same
+   * color/shade names, so the look stays effectively identical anywhere
+   * oklch() does work too.
+   */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+
+  --color-red-50: #fef2f2;
+  --color-red-200: #fecaca;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  --color-green-50: #f0fdf4;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
 }
 
 html, body, #app {

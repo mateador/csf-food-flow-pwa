@@ -1018,9 +1018,9 @@ export interface operations {
                     destination_location_id?: string | null;
                     /**
                      * Format: uuid
-                     * @description Where the food came from ("From"). Required on every new entry.
+                     * @description Where the food came from ("From"). Required for IN entries; must be omitted/null for OUT -- food leaving the centre is being redistributed, not sourced from a donor/shop.
                      */
-                    source_location_id: string;
+                    source_location_id?: string | null;
                     /** @description Name/description of the item being weighed */
                     name: string;
                     food_category_code: components["schemas"]["FoodCategoryCode"];
@@ -1072,8 +1072,11 @@ export interface operations {
                         location_id: string;
                         /** Format: uuid */
                         destination_location_id?: string | null;
-                        /** Format: uuid */
-                        source_location_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Required for IN; must be omitted/null for OUT.
+                         */
+                        source_location_id?: string | null;
                         /** @description Name/description of the item being weighed */
                         name: string;
                         food_category_code: components["schemas"]["FoodCategoryCode"];

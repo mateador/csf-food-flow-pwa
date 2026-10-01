@@ -133,7 +133,7 @@ type CreateEntryBody = {
   entry_type: 'IN' | 'OUT'
   location_id: string
   destination_location_id: string | null
-  source_location_id: string
+  source_location_id: string | null
   name: string
   food_category_code: string
   gross_weight_kg: number
