@@ -2,6 +2,8 @@ import { useState } from 'preact/hooks'
 import { currentUser } from '../store/session'
 import { syncThenSignOut } from '../store/autoSync'
 import { pendingFor } from '../store/offlineQueue'
+import { changeMyPin, ApiError } from '../services/api'
+import { PinFields } from '../components/PinFields'
 import {
   highContrast,
   setHighContrast,
@@ -23,6 +25,40 @@ export function Settings() {
 
   const [signingOut, setSigningOut] = useState(false)
   const waiting = user ? pendingFor(user.id).length : 0
+
+  const [currentPin, setCurrentPin] = useState('')
+  const [newPin, setNewPin] = useState('')
+  const [newPinConfirm, setNewPinConfirm] = useState('')
+  const [changingPin, setChangingPin] = useState(false)
+  const [pinError, setPinError] = useState('')
+  const [pinChanged, setPinChanged] = useState(false)
+
+  const handleChangePin = async (e: Event) => {
+    e.preventDefault()
+    setPinError('')
+    setPinChanged(false)
+    if (currentPin.length !== 4 || newPin.length !== 4) return
+    if (newPin !== newPinConfirm) {
+      setPinError("New PINs don't match.")
+      return
+    }
+    setChangingPin(true)
+    try {
+      await changeMyPin(currentPin, newPin, newPinConfirm)
+      setPinChanged(true)
+      setCurrentPin('')
+      setNewPin('')
+      setNewPinConfirm('')
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'INVALID_PIN') {
+        setPinError('Current PIN is incorrect.')
+      } else {
+        setPinError('Could not change your PIN. Try again.')
+      }
+    } finally {
+      setChangingPin(false)
+    }
+  }
 
   const handleSignOut = async () => {
     setSigningOut(true)
@@ -50,6 +86,51 @@ export function Settings() {
           <span class="text-neutral-500">Role</span>
           <span class="text-neutral-900">{user?.role}</span>
         </div>
+      </div>
+
+      <div class="mb-6 rounded-lg border border-neutral-200 p-4">
+        <p class="mb-3 text-sm font-medium text-neutral-900">Change my PIN</p>
+        {pinError && (
+          <div class="mb-3 rounded-lg bg-red-50 p-2 text-xs text-red-800">{pinError}</div>
+        )}
+        {pinChanged && (
+          <div class="mb-3 rounded-lg bg-green-50 p-2 text-xs text-green-800">PIN changed.</div>
+        )}
+        <form onSubmit={handleChangePin} class="space-y-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-neutral-700">Current PIN</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              required
+              placeholder="0000"
+              value={currentPin}
+              onInput={(e) =>
+                setCurrentPin((e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 4))
+              }
+              class="w-full rounded-lg border border-neutral-300 px-3 py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-csf-purple"
+            />
+          </div>
+          <PinFields
+            pin={newPin}
+            onPinChange={setNewPin}
+            pinConfirm={newPinConfirm}
+            onPinConfirmChange={setNewPinConfirm}
+            pinLabel="New PIN"
+            confirmLabel="Confirm new PIN"
+          />
+          <button
+            type="submit"
+            disabled={
+              changingPin || currentPin.length !== 4 || newPin.length !== 4 || newPinConfirm.length !== 4
+            }
+            class="w-full rounded-lg bg-csf-purple px-4 py-2 font-medium text-white disabled:opacity-50"
+          >
+            {changingPin ? 'Changing…' : 'Change PIN'}
+          </button>
+        </form>
       </div>
 
       <div class="mb-3 flex items-center justify-between rounded-lg border border-neutral-200 p-4">

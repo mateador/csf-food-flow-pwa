@@ -75,6 +75,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/pin/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tell the frontend whether this email needs first-time PIN setup
+         * @description Unlike /auth/code/request, this does reveal a little about account state (whether an active account exists and hasn't set a PIN yet) -- a deliberate trade-off for the PIN login flow, not an oversight.
+         */
+        post: operations["checkPinStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/pin/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * First-time PIN setup, then establish a session
+         * @description Succeeds only for an active user who doesn't have a PIN yet. Changing an existing PIN goes through PATCH /auth/pin (self) or PATCH /users/{id}/pin (admin reset), never this endpoint.
+         */
+        post: operations["setPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/pin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign in with email and PIN */
+        post: operations["loginWithPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change the signed-in user's own PIN
+         * @description Requires the current PIN, not just a valid session -- this app runs on shared tablets that can stay signed in between volunteers.
+         */
+        patch: operations["changePin"];
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -374,6 +451,26 @@ export interface paths {
         head?: never;
         /** Update user name, email, role, location, or active status */
         patch: operations["updateUser"];
+        trace?: never;
+    };
+    "/users/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reset a user's PIN (admin recovery path for a forgotten PIN)
+         * @description No current-PIN check -- this is the recovery path for someone who's forgotten theirs. Any admin may reset any user's PIN, including another admin's; each reset is recorded in the audit log.
+         */
+        patch: operations["resetUserPin"];
         trace?: never;
     };
 }
@@ -692,6 +789,158 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+        };
+    };
+    checkPinStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        needs_setup: boolean;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    setPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    pin: string;
+                    pin_confirm: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sets the httpOnly session cookie via Set-Cookie. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: components["schemas"]["User"];
+                    };
+                };
+            };
+            /** @description This account already has a PIN, or doesn't exist/isn't active -- error.code is PIN_ALREADY_SET. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    loginWithPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                    pin: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sets the httpOnly session cookie via Set-Cookie. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: components["schemas"]["User"];
+                    };
+                };
+            };
+            /** @description Incorrect email or PIN -- error.code is INVALID_PIN. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    changePin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    current_pin: string;
+                    pin: string;
+                    pin_confirm: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "changed";
+                    };
+                };
+            };
+            /** @description Current PIN is incorrect, or not signed in. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
         };
     };
     logout: {
@@ -1379,6 +1628,45 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    resetUserPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    pin: string;
+                    pin_confirm: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["ValidationError"];
         };
     };
 }

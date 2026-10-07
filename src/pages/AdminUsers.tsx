@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import { listUsers } from '../services/api'
+import { Link } from '../components/RouterLink'
 import type { components } from '../types/api'
 
 type User = components['schemas']['User']
@@ -23,11 +24,19 @@ export function AdminUsers() {
       {error && <p class="text-red-600">Couldn't load users.</p>}
       <div class="space-y-2">
         {users.map((u) => (
-          <div key={u.id} class="rounded-lg border border-neutral-200 px-4 py-3">
-            <div class="font-medium text-neutral-900">{u.name}</div>
-            <div class="text-sm text-neutral-500">
-              {u.email} · {u.role}
+          <div
+            key={u.id}
+            class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3"
+          >
+            <div>
+              <div class="font-medium text-neutral-900">{u.name}</div>
+              <div class="text-sm text-neutral-500">
+                {u.email} · {u.role}
+              </div>
             </div>
+            <Link href={`/admin/users/${u.id}/pin`} class="text-sm text-csf-purple underline">
+              Change PIN
+            </Link>
           </div>
         ))}
       </div>

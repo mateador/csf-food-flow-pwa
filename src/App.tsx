@@ -16,6 +16,7 @@ import { Settings } from './pages/Settings'
 import { AdminLocations } from './pages/AdminLocations'
 import { AdminSourceLocations } from './pages/AdminSourceLocations'
 import { AdminUsers } from './pages/AdminUsers'
+import { AdminChangePin } from './pages/AdminChangePin'
 import { NavBar } from './components/NavBar'
 
 function Protected({ children }: { children: ComponentChildren }) {
@@ -149,6 +150,16 @@ export function App() {
             <Protected>
               <AdminOnly>
                 <AdminUsers />
+              </AdminOnly>
+            </Protected>
+          )}
+        />
+        <Route
+          path="/admin/users/:userId/pin"
+          component={(props: { userId?: string }) => (
+            <Protected>
+              <AdminOnly>
+                <AdminChangePin userId={props.userId!} />
               </AdminOnly>
             </Protected>
           )}

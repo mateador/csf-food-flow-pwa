@@ -98,6 +98,44 @@ export function verifyLoginCode(email: string, code: string) {
   })
 }
 
+// PIN login -- the PWA's default sign-in flow. The emailed-code functions
+// above are kept, just unused by the Login page, so email-code sign-in
+// can come back later without rebuilding it.
+export function checkPinStatus(email: string) {
+  return request<{ needs_setup: boolean }>('/auth/pin/check', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  })
+}
+
+export function setPin(email: string, pin: string, pinConfirm: string) {
+  return request<{ user: components['schemas']['User'] }>('/auth/pin/set', {
+    method: 'POST',
+    body: JSON.stringify({ email, pin, pin_confirm: pinConfirm })
+  })
+}
+
+export function loginWithPin(email: string, pin: string) {
+  return request<{ user: components['schemas']['User'] }>('/auth/pin/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, pin })
+  })
+}
+
+export function changeMyPin(currentPin: string, pin: string, pinConfirm: string) {
+  return request<{ status: string }>('/auth/pin', {
+    method: 'PATCH',
+    body: JSON.stringify({ current_pin: currentPin, pin, pin_confirm: pinConfirm })
+  })
+}
+
+export function resetUserPin(userId: string, pin: string, pinConfirm: string) {
+  return request<components['schemas']['User']>(`/users/${userId}/pin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ pin, pin_confirm: pinConfirm })
+  })
+}
+
 /** Expires the session cookie on this device. The browser can't delete an
  * httpOnly cookie itself, so signing out has to go through the server. */
 export function logout() {
