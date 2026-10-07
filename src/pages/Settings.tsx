@@ -5,11 +5,18 @@ import { pendingFor } from '../store/offlineQueue'
 import {
   highContrast,
   setHighContrast,
-  highTextSize,
-  setHighTextSize,
+  textSize,
+  setTextSize,
   darkMode,
-  setDarkMode
+  setDarkMode,
+  type TextSize
 } from '../store/theme'
+
+const TEXT_SIZE_OPTIONS: { value: TextSize; label: string }[] = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'large', label: 'Large' },
+  { value: 'xlarge', label: 'Extra Large' }
+]
 
 export function Settings() {
   const user = currentUser.value
@@ -89,28 +96,31 @@ export function Settings() {
         </button>
       </div>
 
-      <div class="mb-6 flex items-center justify-between rounded-lg border border-neutral-200 p-4">
-        <div>
-          <p class="text-sm font-medium text-neutral-900">Large text</p>
-          <p class="text-xs text-neutral-500">
-            Bigger text and buttons throughout the app -- stays on for this device only.
-          </p>
+      <div class="mb-6 rounded-lg border border-neutral-200 p-4">
+        <p class="text-sm font-medium text-neutral-900">Text size</p>
+        <p class="mb-3 text-xs text-neutral-500">
+          Bigger text and buttons throughout the app -- stays on this device only.
+        </p>
+        <div class="grid grid-cols-3 gap-2" role="group" aria-label="Text size">
+          {TEXT_SIZE_OPTIONS.map((option) => {
+            const isSelected = textSize.value === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setTextSize(option.value)}
+                class={
+                  isSelected
+                    ? 'rounded-lg border-2 border-csf-purple bg-csf-purple px-2 py-2 text-center text-sm font-medium text-white active:scale-[0.98]'
+                    : 'rounded-lg border-2 border-neutral-200 bg-white px-2 py-2 text-center text-sm text-neutral-700 active:scale-[0.98]'
+                }
+              >
+                {option.label}
+              </button>
+            )
+          })}
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={highTextSize.value}
-          onClick={() => setHighTextSize(!highTextSize.value)}
-          class={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-            highTextSize.value ? 'bg-csf-purple' : 'bg-neutral-300'
-          }`}
-        >
-          <span
-            class={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition-transform ${
-              highTextSize.value ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </button>
       </div>
 
       <div class="mb-6 rounded-lg border border-neutral-200 p-4 text-sm text-neutral-600">

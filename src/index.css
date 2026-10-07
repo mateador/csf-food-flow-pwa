@@ -124,15 +124,33 @@ body {
 }
 
 /*
- * Large text mode -- a per-device preference (see store/theme.ts) aimed at
- * the hub tablet, where text-sm/text-xs read too small from counter
- * distance. Since every Tailwind font-size utility in this app is rem-based,
- * scaling the root font-size scales all of them (and the rem-based spacing
- * scale, giving bigger tap targets as a side effect) without touching
- * component markup -- same reasoning as the contrast override above.
+ * Text size -- a per-device preference (see store/theme.ts) aimed at the
+ * hub tablet, where text-sm/text-xs read too small from counter distance.
+ * Three levels, not on/off: different people on the same shared tablet
+ * want different amounts of this. Since every Tailwind font-size utility
+ * in this app is rem-based, scaling the root font-size scales all of them
+ * (and the rem-based spacing scale, giving bigger tap targets as a side
+ * effect) without touching component markup -- same reasoning as the
+ * contrast override above.
  */
 [data-text-size='large'] {
   font-size: 120%;
+}
+
+[data-text-size='xlarge'] {
+  font-size: 145%;
+}
+
+/*
+ * At the largest size, the Dashboard's tile content (icon, title,
+ * description -- all rem-scaled) keeps growing while a fixed 2-column
+ * grid doesn't, so tiles get cramped. Give them the full width instead.
+ * Scoped to this one class, not a blanket override of grid-cols-2 --
+ * CategorySelector's own 2-column button grid on the weigh forms is
+ * deliberately untouched.
+ */
+[data-text-size='xlarge'] .dashboard-tile-grid {
+  grid-template-columns: 1fr;
 }
 
 /*

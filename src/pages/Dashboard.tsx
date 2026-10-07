@@ -90,7 +90,7 @@ export function Dashboard() {
       </h1>
       <p class="mb-6 text-sm text-neutral-500">What would you like to record?</p>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="dashboard-tile-grid grid grid-cols-2 gap-4">
         <Tile href="/weigh-in" icon={<FoodInIcon />} title="Food In" description="Record surplus arriving" />
         {(role === 'FOOD_CENTRE' || role === 'ADMIN') && (
           <Tile
