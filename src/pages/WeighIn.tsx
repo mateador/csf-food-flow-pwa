@@ -119,6 +119,8 @@ export function WeighIn() {
       location_id: locationId,
       destination_location_id: null,
       source_location_id: fromLocationId,
+      out_destination_id: null,
+      out_source_id: null,
       name: name.trim(),
       food_category_code: categoryCode,
       gross_weight_kg: Number(grossWeightKg),

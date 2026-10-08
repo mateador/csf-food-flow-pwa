@@ -159,6 +159,14 @@ export function listSourceLocations() {
   return request<components['schemas']['SourceLocation'][]>('/source-locations/')
 }
 
+export function listOutDestinations() {
+  return request<components['schemas']['OutDestination'][]>('/out-destinations/')
+}
+
+export function listOutSources() {
+  return request<components['schemas']['OutSource'][]>('/out-sources/')
+}
+
 export function listTrayTypes() {
   return request<components['schemas']['TrayType'][]>('/tray-types/')
 }
@@ -172,7 +180,9 @@ type CreateEntryBody = {
   location_id: string
   destination_location_id: string | null
   source_location_id: string | null
-  name: string
+  out_destination_id: string | null
+  out_source_id: string | null
+  name: string | null
   food_category_code: string
   gross_weight_kg: number
   trays: TrayInput[]

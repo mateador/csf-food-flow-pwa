@@ -47,9 +47,20 @@ export const createEntrySchema = z
     client_uuid: z.string().uuid(),
     entry_type: entryTypeSchema,
     location_id: z.string().uuid(),
+    // destination_location_id ("which hub") is legacy -- no longer
+    // collected by the Weigh-out form, which now has its own, unrelated
+    // out_destination_id ("Destination", an internal program/use). Kept
+    // here, always null, only because the API's request shape still
+    // accepts it.
     destination_location_id: z.string().uuid().nullable(),
+    // source_location_id ("From", shop/donor) and name are IN-only.
+    // out_destination_id ("Destination") and out_source_id ("From", a
+    // surplus classification -- a different concept from
+    // source_location_id despite the shared label) are OUT-only.
     source_location_id: z.string().uuid().nullable(),
-    name: z.string().trim().min(1, 'Name is required'),
+    out_destination_id: z.string().uuid().nullable(),
+    out_source_id: z.string().uuid().nullable(),
+    name: z.string().trim().nullable(),
     food_category_code: foodCategoryCodeSchema,
     gross_weight_kg: z
       .number()
@@ -75,12 +86,8 @@ export const createEntrySchema = z
     { message: 'IN entries must not have a destination location', path: ['destination_location_id'] }
   )
   .refine(
-    (data) => (data.entry_type === 'OUT' ? data.destination_location_id !== null : true),
-    { message: 'OUT entries require a destination location', path: ['destination_location_id'] }
-  )
-  .refine(
-    (data) => data.destination_location_id !== data.location_id,
-    { message: 'Destination cannot be the same as the source location', path: ['destination_location_id'] }
+    (data) => (data.entry_type === 'IN' ? !!data.name && data.name.trim().length > 0 : true),
+    { message: 'Name is required', path: ['name'] }
   )
   .refine(
     (data) => (data.entry_type === 'IN' ? data.source_location_id !== null : true),
@@ -89,6 +96,22 @@ export const createEntrySchema = z
   .refine(
     (data) => (data.entry_type === 'OUT' ? data.source_location_id === null : true),
     { message: 'OUT entries must not have a source location', path: ['source_location_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'IN' ? data.out_destination_id === null : true),
+    { message: 'IN entries must not have a destination', path: ['out_destination_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'OUT' ? data.out_destination_id !== null : true),
+    { message: 'Destination is required', path: ['out_destination_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'IN' ? data.out_source_id === null : true),
+    { message: 'IN entries must not have a from', path: ['out_source_id'] }
+  )
+  .refine(
+    (data) => (data.entry_type === 'OUT' ? data.out_source_id !== null : true),
+    { message: 'From is required', path: ['out_source_id'] }
   )
 
 export type CreateEntryInput = z.infer<typeof createEntrySchema>

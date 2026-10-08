@@ -23,6 +23,8 @@ const ENTRY = {
   location_id: 'hub-1',
   destination_location_id: null,
   source_location_id: 'source-1',
+  out_destination_id: null,
+  out_source_id: null,
   name: 'Tesco',
   food_category_code: 'FRESH',
   gross_weight_kg: 10,

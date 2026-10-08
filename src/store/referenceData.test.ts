@@ -7,6 +7,8 @@ vi.mock('../services/api', async () => {
     listCategories: vi.fn(),
     listLocations: vi.fn(),
     listSourceLocations: vi.fn(),
+    listOutDestinations: vi.fn(),
+    listOutSources: vi.fn(),
     listTrayTypes: vi.fn()
   }
 })
@@ -17,6 +19,8 @@ import {
   listCategories,
   listLocations,
   listSourceLocations,
+  listOutDestinations,
+  listOutSources,
   listTrayTypes
 } from '../services/api'
 import {
@@ -34,6 +38,8 @@ describe('referenceData', () => {
     vi.mocked(listCategories).mockReset()
     vi.mocked(listLocations).mockReset()
     vi.mocked(listSourceLocations).mockReset()
+    vi.mocked(listOutDestinations).mockReset()
+    vi.mocked(listOutSources).mockReset()
     vi.mocked(listTrayTypes).mockReset()
   })
 
@@ -68,10 +74,12 @@ describe('referenceData', () => {
     await expect(getCategories()).rejects.toBeInstanceOf(ApiError)
   })
 
-  it('warm fetches all four lists and ignores failures', async () => {
+  it('warm fetches all six lists and ignores failures', async () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockRejectedValue(new NetworkError())
     vi.mocked(listSourceLocations).mockResolvedValue([] as never)
+    vi.mocked(listOutDestinations).mockResolvedValue([] as never)
+    vi.mocked(listOutSources).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     await expect(warmReferenceData()).resolves.toBeUndefined()
@@ -83,6 +91,8 @@ describe('referenceData', () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockResolvedValue([] as never)
     vi.mocked(listSourceLocations).mockResolvedValue([] as never)
+    vi.mocked(listOutDestinations).mockResolvedValue([] as never)
+    vi.mocked(listOutSources).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
     await warmReferenceData()
 
@@ -97,6 +107,8 @@ describe('referenceData', () => {
       new ApiError('UNAUTHORIZED', 'Sign-in required', 401)
     )
     vi.mocked(listSourceLocations).mockResolvedValue([] as never)
+    vi.mocked(listOutDestinations).mockResolvedValue([] as never)
+    vi.mocked(listOutSources).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     const lists = await loadFormLists()
@@ -110,6 +122,8 @@ describe('referenceData', () => {
     vi.mocked(listCategories).mockResolvedValue(CATEGORIES as never)
     vi.mocked(listLocations).mockResolvedValue([] as never)
     vi.mocked(listSourceLocations).mockResolvedValue([] as never)
+    vi.mocked(listOutDestinations).mockResolvedValue([] as never)
+    vi.mocked(listOutSources).mockResolvedValue([] as never)
     vi.mocked(listTrayTypes).mockResolvedValue([] as never)
 
     expect((await loadFormLists()).incomplete).toBe(false)

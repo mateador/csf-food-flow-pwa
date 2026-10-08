@@ -223,6 +223,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/out-destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active Weigh-out "Destination" values, for the form dropdown
+         * @description Fixed reference list, GET-only (no admin CRUD, unlike SourceLocation) -- see OutDestination.
+         */
+        get: operations["listOutDestinations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/out-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active Weigh-out "From" values, for the form dropdown
+         * @description Fixed reference list, GET-only (no admin CRUD, unlike SourceLocation) -- see OutSource.
+         */
+        get: operations["listOutSources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations": {
         parameters: {
             query?: never;
@@ -314,7 +354,7 @@ export interface paths {
         put?: never;
         /**
          * Create a single weigh-in or weigh-out entry
-         * @description Role rules enforced server-side: HUB may only create IN entries at their own assigned location with destination_location_id null; FOOD_CENTRE may create IN at the centre or OUT to any hub; ADMIN may create either for any valid location.
+         * @description Role rules enforced server-side: HUB may only create IN entries at their own assigned location; FOOD_CENTRE may create IN at the centre or OUT; ADMIN may create either for any valid location. IN requires name and source_location_id; OUT requires out_destination_id and out_source_id instead (see those fields).
          */
         post: operations["createEntry"];
         delete?: never;
@@ -522,8 +562,22 @@ export interface components {
             type: components["schemas"]["LocationType"];
             active: boolean;
         };
-        /** @description Where food came from before being delivered to a hub or food centre (a shop, donor, or "From" on Food In / Food Out) -- distinct from Location, which is the hub/food-centre the entry is recorded at. */
+        /** @description Where food came from before being delivered to a hub or food centre (a shop or donor -- "From" on Food In only). Distinct from Location (the hub/food-centre the entry is recorded at) and from OutSource, a different, Weigh-out-only concept that happens to share the same "From" field label on the form. */
         SourceLocation: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            active: boolean;
+        };
+        /** @description "Destination" on Weigh-out -- an internal program or use the food goes to (e.g. a cafe, catering, a named event), not a physical hub. Unrelated to Location/destination_location_id, which used to be how Weigh-out's destination worked. */
+        OutDestination: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            active: boolean;
+        };
+        /** @description "From" on Weigh-out -- a surplus/donation classification (e.g. gleaned, farm, Fareshare paid), not a shop/donor name. A different concept from SourceLocation (Food In's "From"), despite the shared field label. */
+        OutSource: {
             /** Format: uuid */
             id: string;
             name: string;
@@ -542,15 +596,28 @@ export interface components {
             entry_type: components["schemas"]["EntryType"];
             /** Format: uuid */
             location_id: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Legacy "which hub" destination. No longer required or collected for OUT -- see out_destination_id. Null on every entry created going forward; may be set on entries recorded before this change.
+             */
             destination_location_id?: string | null;
             /**
              * Format: uuid
-             * @description Where the food came from ("From"). Required on every entry created going forward; null only on entries recorded before this field existed.
+             * @description Where the food came from ("From" on Food In only). Required for IN; null for OUT and for entries recorded before this field existed.
              */
             source_location_id: string | null;
-            /** @description Name/description of the item being weighed */
-            name: string;
+            /**
+             * Format: uuid
+             * @description "Destination" on Weigh-out -- an internal program/use, see OutDestination. Required for OUT; null for IN.
+             */
+            out_destination_id: string | null;
+            /**
+             * Format: uuid
+             * @description "From" on Weigh-out -- a surplus classification, see OutSource (a different concept from source_location_id). Required for OUT; null for IN.
+             */
+            out_source_id: string | null;
+            /** @description Name/description of the item being weighed. Required for IN; optional for OUT (the form no longer collects one). */
+            name: string | null;
             food_category_code: components["schemas"]["FoodCategoryCode"];
             /** @description What the scale reads -- food and trays together. */
             gross_weight_kg: number;
@@ -1029,6 +1096,48 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
         };
     };
+    listOutDestinations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutDestination"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    listOutSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutSource"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
     listLocations: {
         parameters: {
             query?: {
@@ -1221,6 +1330,8 @@ export interface operations {
                 location_id?: string;
                 destination_location_id?: string;
                 source_location_id?: string;
+                out_destination_id?: string;
+                out_source_id?: string;
                 entry_type?: components["schemas"]["EntryType"];
                 food_category_code?: components["schemas"]["FoodCategoryCode"];
                 status?: components["schemas"]["EntryStatus"];
@@ -1263,15 +1374,28 @@ export interface operations {
                     entry_type: components["schemas"]["EntryType"];
                     /** Format: uuid */
                     location_id: string;
-                    /** Format: uuid */
+                    /**
+                     * Format: uuid
+                     * @description Legacy "which hub" destination. No longer required or read for OUT -- see out_destination_id.
+                     */
                     destination_location_id?: string | null;
                     /**
                      * Format: uuid
-                     * @description Where the food came from ("From"). Required for IN entries; must be omitted/null for OUT -- food leaving the centre is being redistributed, not sourced from a donor/shop.
+                     * @description Where the food came from ("From" on Food In). Required for IN; must be omitted/null for OUT.
                      */
                     source_location_id?: string | null;
-                    /** @description Name/description of the item being weighed */
-                    name: string;
+                    /**
+                     * Format: uuid
+                     * @description "Destination" on Weigh-out (an internal program/use, see OutDestination). Required for OUT; must be omitted/null for IN.
+                     */
+                    out_destination_id?: string | null;
+                    /**
+                     * Format: uuid
+                     * @description "From" on Weigh-out (a surplus classification, see OutSource -- a different concept from source_location_id). Required for OUT; must be omitted/null for IN.
+                     */
+                    out_source_id?: string | null;
+                    /** @description Name/description of the item being weighed. Required for IN; optional for OUT. */
+                    name?: string | null;
                     food_category_code: components["schemas"]["FoodCategoryCode"];
                     /** @description What the scale reads -- food and trays together. */
                     gross_weight_kg: number;
@@ -1326,8 +1450,18 @@ export interface operations {
                          * @description Required for IN; must be omitted/null for OUT.
                          */
                         source_location_id?: string | null;
-                        /** @description Name/description of the item being weighed */
-                        name: string;
+                        /**
+                         * Format: uuid
+                         * @description Required for OUT; must be omitted/null for IN.
+                         */
+                        out_destination_id?: string | null;
+                        /**
+                         * Format: uuid
+                         * @description Required for OUT; must be omitted/null for IN.
+                         */
+                        out_source_id?: string | null;
+                        /** @description Name/description of the item being weighed. Required for IN; optional for OUT. */
+                        name?: string | null;
                         food_category_code: components["schemas"]["FoodCategoryCode"];
                         gross_weight_kg: number;
                         trays?: {

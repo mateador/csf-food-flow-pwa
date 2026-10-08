@@ -11,10 +11,13 @@ import { scrollToTop } from '../utils/scroll'
 import type { components } from '../types/api'
 
 type Location = components['schemas']['Location']
+type OutDestination = components['schemas']['OutDestination']
+type OutSource = components['schemas']['OutSource']
 type FoodCategory = components['schemas']['FoodCategory']
 type TrayType = components['schemas']['TrayType']
 
 const LAST_DESTINATION_KEY = 'weigh-out-destination'
+const LAST_SOURCE_KEY = 'weigh-out-source'
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
@@ -22,11 +25,13 @@ function todayIso(): string {
 
 export function WeighOut() {
   const [locations, setLocations] = useState<Location[]>([])
+  const [outDestinations, setOutDestinations] = useState<OutDestination[]>([])
+  const [outSources, setOutSources] = useState<OutSource[]>([])
   const [categories, setCategories] = useState<FoodCategory[]>([])
   const [trayTypes, setTrayTypes] = useState<TrayType[]>([])
   const [sourceLocationId, setSourceLocationId] = useState('')
-  const [destinationId, setDestinationId] = useState('')
-  const [name, setName] = useState('')
+  const [outDestinationId, setOutDestinationId] = useState('')
+  const [outSourceId, setOutSourceId] = useState('')
   const [categoryCode, setCategoryCode] = useState('')
   const [grossWeightKg, setGrossWeightKg] = useState('')
   const [trayQuantities, setTrayQuantities] = useState<Record<string, number>>({})
@@ -43,6 +48,8 @@ export function WeighOut() {
     // Device copies are used when there's no connection -- see referenceData.ts
     loadFormLists().then((lists) => {
       setLocations(lists.locations)
+      setOutDestinations(lists.outDestinations)
+      setOutSources(lists.outSources)
       setCategories(lists.categories)
       setTrayTypes(lists.trayTypes)
       setListsIncomplete(lists.incomplete)
@@ -50,7 +57,6 @@ export function WeighOut() {
   }, [])
 
   const foodCentres = locations.filter((l) => l.type === 'FOOD_CENTRE')
-  const hubs = locations.filter((l) => l.type === 'HUB')
 
   // Only one food centre in practice for V1 -- preselect it once loaded so
   // this isn't an extra tap on every single weigh-out.
@@ -60,18 +66,27 @@ export function WeighOut() {
     }
   }, [foodCentres])
 
-  // Same reasoning as WeighIn's remembered location -- most weigh-outs
-  // from a given device go to the same hub repeatedly, so default to
-  // last time's choice rather than re-picking from the full hub list
-  // every single time.
+  // Most weigh-outs from a given device go to the same destination/from
+  // repeatedly, so default to last time's choice rather than re-picking
+  // from the full list every single time -- same reasoning as WeighIn's
+  // remembered "From" location.
   useEffect(() => {
-    if (!destinationId && hubs.length > 0) {
+    if (!outDestinationId && outDestinations.length > 0) {
       const remembered = getLastLocation(LAST_DESTINATION_KEY)
-      if (remembered && hubs.some((h) => h.id === remembered)) {
-        setDestinationId(remembered)
+      if (remembered && outDestinations.some((d) => d.id === remembered)) {
+        setOutDestinationId(remembered)
       }
     }
-  }, [hubs])
+  }, [outDestinations])
+
+  useEffect(() => {
+    if (!outSourceId && outSources.length > 0) {
+      const remembered = getLastLocation(LAST_SOURCE_KEY)
+      if (remembered && outSources.some((s) => s.id === remembered)) {
+        setOutSourceId(remembered)
+      }
+    }
+  }, [outSources])
 
   const trays = useMemo(
     () =>
@@ -107,9 +122,11 @@ export function WeighOut() {
       client_uuid: crypto.randomUUID(),
       entry_type: 'OUT' as const,
       location_id: sourceLocationId,
-      destination_location_id: destinationId || null,
+      destination_location_id: null,
       source_location_id: null,
-      name: name.trim(),
+      out_destination_id: outDestinationId || null,
+      out_source_id: outSourceId || null,
+      name: null,
       food_category_code: categoryCode,
       gross_weight_kg: Number(grossWeightKg),
       trays,
@@ -141,11 +158,11 @@ export function WeighOut() {
         return
       }
       if (outcome.kind === 'signed_out') return // sessionEnded() has moved to sign-in
-      setLastLocation(LAST_DESTINATION_KEY, destinationId)
+      setLastLocation(LAST_DESTINATION_KEY, outDestinationId)
+      setLastLocation(LAST_SOURCE_KEY, outSourceId)
       scrollToTop()
       if (outcome.kind === 'saved') setSaved(true)
       else setSavedOffline(true)
-      setName('')
       setGrossWeightKg('')
       setTrayQuantities({})
       setNotes('')
@@ -205,17 +222,35 @@ export function WeighOut() {
 
       <form onSubmit={handleSubmit} class="space-y-4">
         <div>
-          <label class="mb-1 block text-sm font-medium text-neutral-700">Destination hub</label>
+          <label class="mb-1 block text-sm font-medium text-neutral-700">Destination</label>
           <select
             required
-            value={destinationId}
-            onInput={(e) => setDestinationId((e.target as HTMLSelectElement).value)}
+            autoFocus
+            value={outDestinationId}
+            onInput={(e) => setOutDestinationId((e.target as HTMLSelectElement).value)}
             class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           >
-            <option value="">Select a hub</option>
-            {hubs.map((hub) => (
-              <option key={hub.id} value={hub.id}>
-                {hub.name}
+            <option value="">Select a destination</option>
+            {outDestinations.map((destination) => (
+              <option key={destination.id} value={destination.id}>
+                {destination.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-medium text-neutral-700">From</label>
+          <select
+            required
+            value={outSourceId}
+            onInput={(e) => setOutSourceId((e.target as HTMLSelectElement).value)}
+            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
+          >
+            <option value="">Select where this came from</option>
+            {outSources.map((source) => (
+              <option key={source.id} value={source.id}>
+                {source.name}
               </option>
             ))}
           </select>
@@ -229,18 +264,6 @@ export function WeighOut() {
             max={todayIso()}
             value={collectionDate}
             onInput={(e) => setCollectionDate((e.target as HTMLInputElement).value)}
-            class="w-full rounded-lg border border-neutral-300 px-4 py-3"
-          />
-        </div>
-
-        <div>
-          <label class="mb-1 block text-sm font-medium text-neutral-700">Name</label>
-          <input
-            type="text"
-            required
-            autoFocus
-            value={name}
-            onInput={(e) => setName((e.target as HTMLInputElement).value)}
             class="w-full rounded-lg border border-neutral-300 px-4 py-3"
           />
         </div>

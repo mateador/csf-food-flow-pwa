@@ -10,7 +10,9 @@ export type QueuedEntry = {
   location_id: string
   destination_location_id: string | null
   source_location_id: string | null
-  name: string
+  out_destination_id: string | null
+  out_source_id: string | null
+  name: string | null
   food_category_code: string
   gross_weight_kg: number
   trays: { tray_type_code: string; quantity: number }[]

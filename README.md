@@ -20,7 +20,7 @@ decision. The backend is
 | Screen | Who | What |
 |---|---|---|
 | **Food In** (`/weigh-in`) | Everyone (hub volunteers at their own hub only) | Record food arriving: where it came from ("From"), category, gross weight and trays. Net weight is worked out from the trays |
-| **Food Out** (`/weigh-out`) | Food centre, admin | Record food leaving the centre for a hub |
+| **Food Out** (`/weigh-out`) | Food centre, admin | Record food leaving the centre: its destination ("Destination"), what kind of surplus it is ("From"), category, gross weight and trays |
 | **Entries** (`/entries`) | Everyone (hub volunteers see their own hub) | Recent entries, with details |
 | **Weekly report** (`/reports/weekly`) | Everyone (hub volunteers see their own hub) | Monday-to-Sunday totals by category, location and source. Admins can export CSV |
 | **Sync** (`/sync`) | Everyone | Entries waiting to upload, any the server refused, and other volunteers' waiting entries on this device |
