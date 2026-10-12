@@ -19,13 +19,14 @@ decision. The backend is
 
 | Screen | Who | What |
 |---|---|---|
+| **Dashboard** (`/`) | Everyone | Home screen after sign-in: tile shortcuts to Food In/Out, Entries and Sync (Food Out hidden for hub volunteers) |
 | **Food In** (`/weigh-in`) | Everyone (hub volunteers at their own hub only) | Record food arriving: where it came from ("From"), category, gross weight and trays. Net weight is worked out from the trays |
 | **Food Out** (`/weigh-out`) | Food centre, admin | Record food leaving the centre: its destination ("Destination"), what kind of surplus it is ("From"), category, gross weight and trays |
 | **Entries** (`/entries`) | Everyone (hub volunteers see their own hub) | Recent entries, with details |
 | **Weekly report** (`/reports/weekly`) | Everyone (hub volunteers see their own hub) | Monday-to-Sunday totals by category, location and source. Admins can export CSV |
 | **Sync** (`/sync`) | Everyone | Entries waiting to upload, any the server refused, and other volunteers' waiting entries on this device |
-| **Settings** (`/settings`) | Everyone | Display preferences, and sign-out |
-| **Admin** (`/admin/...`) | Admin | Locations, source locations ("From" list) and users. Read-only for now, see A2 |
+| **Settings** (`/settings`) | Everyone | Account info, changing your own PIN, display preferences, and sign-out |
+| **Admin** (`/admin/...`) | Admin | Locations, source locations ("From" list) and users are read-only for now, see A2 -- except resetting a user's PIN, which is live (`/admin/users/:userId/pin`) |
 
 Roles are enforced by the API on every request. The screens only decide
 what to show.
@@ -62,6 +63,8 @@ src/
     TraySelector.tsx     -- tray counts, used to work out net weight
     NavBar.tsx           -- navigation, with the waiting-to-upload badge
     RouterLink.tsx       -- typed preact-router link
+    PinFields.tsx        -- shared new-PIN/confirm-PIN inputs, used by sign-in
+                            setup, Settings' "Change my PIN" and admin reset
   pages/             -- one file per route (see "What it does")
   services/
     api.ts           -- typed API client; tells "no connection" apart from "refused"
@@ -146,17 +149,20 @@ the person who recorded them signs in on that device.
 
 ## Display preferences
 
-Three independent toggles in Settings (`src/store/theme.ts`), each a
-per-device `localStorage` preference rather than a user account setting
--- a tablet mounted at a hub counter can have one turned on once and it
+Three independent preferences in Settings (`src/store/theme.ts`), each a
+per-device `localStorage` setting rather than a user account setting --
+a tablet mounted at a hub counter can have one turned on once and it
 stays on for that device only, without affecting anyone's own phone:
 
-- **High contrast** -- darker text/borders on the normal bright
-  background, for reading in direct sunlight/glare.
-- **Large text** -- scales the whole UI's root font size up, for a
+- **High contrast** -- on/off toggle. Darker text/borders on the normal
+  bright background, for reading in direct sunlight/glare.
+- **Text size** -- Normal/Large/Extra Large, not on/off -- different
+  volunteers sharing the same tablet want different amounts of this, not
+  just one fixed size. Scales the whole UI's root font size up, for a
   tablet viewed from counter distance.
-- **Dark mode** -- a genuine dark theme (not the same thing as High
-  Contrast -- that one assumes a bright page), for low light.
+- **Dark mode** -- on/off toggle. A genuine dark theme (not the same
+  thing as High Contrast -- that one assumes a bright page), for low
+  light.
 
 All three use the same mechanism: a `data-*` attribute set on `<html>`
 before first paint (see the inline script in `index.html`, which avoids a
